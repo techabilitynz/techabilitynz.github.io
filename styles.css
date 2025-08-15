@@ -5,6 +5,7 @@
 
 /* Base type */
 :root{
+  color-scheme: light; /* keep light theme everywhere */
   --ta-primary: #0d6efd;
   --ta-dark: #0b1220;
   --ta-grad-1: 28, 100, 242; /* rgb for gradients */
@@ -190,7 +191,7 @@ p{ color: #5b6470; }
   .banner{ height: clamp(180px, 40vw, 300px); }
 }
 
-/* Motion and color preferences */
+/* Motion preferences */
 @media (prefers-reduced-motion: reduce){
   *{
     animation-duration: .001ms !important;
@@ -199,28 +200,24 @@ p{ color: #5b6470; }
     scroll-behavior: auto !important;
   }
 }
-@media (prefers-color-scheme: dark){
-  body{ background-color: #0b0f1a; color: #e7eaf0; }
-  .card-service{ background-color: #0f1422; border-color: rgba(255,255,255,.06); }
-  section{ background: #0f1422; }
-}
 
 /* Accessibility, focus styles */
 :focus-visible{
   outline: 3px solid rgba(13,110,253,.65);
   outline-offset: 2px;
 }
+
 /* Hero edge fix, crisp image with blurred fill behind */
 .hero-bg{
   background-image: var(--ta-banner-img) !important;
-  background-size: contain !important;      /* show full image, no zoom */
+  background-size: contain !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
-  background-color: transparent !important; /* no tinted bars */
-  opacity: 1 !important;                    /* remove semi-transparent wash */
+  background-color: transparent !important;
+  opacity: 1 !important;
   position: absolute;
   inset: 0;
-  z-index: 0;                                /* create stacking context */
+  z-index: 0;
 }
 
 /* Blurred cover fills any empty area, hides the hard edge */
@@ -233,8 +230,8 @@ p{ color: #5b6470; }
   background-position: center;
   background-repeat: no-repeat;
   filter: blur(12px) brightness(0.65) saturate(0.9);
-  transform: scale(1.05);                    /* hide blur edges */
-  z-index: -1;                               /* sit behind the crisp layer */
+  transform: scale(1.05);
+  z-index: -1;
 }
 
 /* Uniform contrast overlay across the whole hero */
