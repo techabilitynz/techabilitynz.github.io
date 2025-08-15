@@ -5,45 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-  <title>Tech Ability, Internet services</title>
-  <meta name="description" content="Tech Fibre plans with local support. Simple prices, bring your own router or hire one for $5 per month.">
+  <title>Tech Ability, Tech Fibre internet</title>
+  <meta name="description" content="Tech Fibre internet plans with optional router hire. Simple pricing and local support.">
 
-  <!-- Open Graph and Twitter -->
   <meta property="og:url" content="https://www.techability.co.nz/internet">
-  <meta property="og:title" content="Tech Ability, Internet services">
+  <meta property="og:title" content="Tech Ability, Tech Fibre internet">
   <meta property="og:type" content="website">
-  <meta property="og:description" content="Tech Fibre plans with local support.">
+  <meta property="og:description" content="Fibre plans with simple pricing and local support">
   <meta property="og:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Abstract tech banner that represents connectivity">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Tech Ability, Internet services">
-  <meta name="twitter:description" content="Tech Fibre plans with local support.">
-  <meta name="twitter:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
 
-  <!-- Fonts and Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Site CSS -->
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="favicon.ico">
   <meta name="theme-color" content="#0d6efd">
 </head>
-<body class="bg-body">
+<body>
 
-  <!-- Skip link -->
   <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 px-3 py-2 bg-primary text-white rounded">Skip to main content</a>
 
-  <!-- Header -->
   <header class="sticky-top shadow-sm" role="banner">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Primary">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white" aria-label="Primary">
       <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html" aria-current="page">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
           <i class="bi bi-lightning-charge-fill text-primary" aria-hidden="true"></i>
           <span class="fw-semibold">Tech Ability</span>
         </a>
@@ -58,9 +45,8 @@
             <li class="nav-item"><a class="nav-link active" href="/internet.html" aria-current="page">Internet</a></li>
             <li class="nav-item"><a class="nav-link" href="/contact.html">Contact</a></li>
             <li class="nav-item ms-lg-3">
-              <a class="btn btn-primary btn-sm px-3" href="tel:+64221843756">
-                <i class="bi bi-telephone me-1" aria-hidden="true"></i>
-                022 184 3756
+              <a class="btn btn-primary btn-sm px-3" href="/contact.html">
+                <i class="bi bi-chat-dots me-1" aria-hidden="true"></i> Get help
               </a>
             </li>
           </ul>
@@ -69,111 +55,93 @@
     </nav>
   </header>
 
-  <!-- Hero -->
-  <section class="hero position-relative overflow-hidden" aria-labelledby="hero-heading">
-    <div class="hero-bg" aria-hidden="true"></div>
-    <div class="container position-relative z-1">
-      <div class="row align-items-center">
-        <div class="col-lg-8 mx-auto text-center">
-          <h1 id="hero-heading" class="display-5 fw-bold text-white">Tech Fibre plans</h1>
-          <p class="lead text-white-50 mt-3 mb-0">
-            Simple prices, local help, bring your own router or hire one for $5 per month.
-          </p>
+  <section class="hero" aria-labelledby="internet-hero-heading">
+    <div class="hero-media" aria-hidden="true">
+      <img src="https://i.postimg.cc/zvvGqpYt/banner.jpg" alt="" width="1200" height="630" loading="eager" decoding="async">
+    </div>
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="hero-content container">
+      <div class="row">
+        <div class="col-lg-9 mx-auto">
+          <h1 id="internet-hero-heading" class="display-5 fw-bold">Tech Fibre internet</h1>
+          <p class="lead mt-3 mb-0">Simple pricing, optional router hire, friendly local support.</p>
         </div>
       </div>
     </div>
-    <svg class="position-absolute bottom-0 start-0 w-100 text-body" height="80" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
+    <svg class="section-divider" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
       <path fill="currentColor" d="M0,64 C240,32 480,32 720,48 C960,64 1200,64 1440,48 L1440,80 L0,80 Z"></path>
     </svg>
   </section>
 
   <main id="main-content" tabindex="-1">
-
     <!-- Plans -->
     <section class="py-6" aria-labelledby="plans-heading">
       <div class="container">
-        <div class="text-center mb-4">
+        <div class="text-center mb-5">
           <h2 id="plans-heading" class="fw-bold">Plans</h2>
-          <p class="text-secondary mb-0">All prices are per month</p>
+          <p class="text-secondary mb-0">Bring your own router, or hire one for 5 dollars per month</p>
         </div>
 
         <div class="row g-4">
           <!-- Starter -->
           <div class="col-md-6 col-lg-4">
-            <article class="card card-service h-100 shadow-sm" aria-labelledby="plan-starter">
+            <article class="card card-service h-100 shadow-sm">
               <div class="card-body d-flex flex-column">
-                <h3 id="plan-starter" class="h5 mb-2 d-flex align-items-center gap-2">
-                  <i class="bi bi-emoji-smile text-primary" aria-hidden="true"></i> Tech Fibre Starter
-                </h3>
-                <p class="mb-1">
-                  <span class="display-6 fw-bold">$86</span>
-                  <span class="text-secondary"> per month</span>
-                </p>
-                <p class="small text-secondary mb-3">(with router hire, $90 per month)</p>
-                <ul class="small mb-4 ps-3">
-                  <li>Bring your own router, or hire one for $5 per month</li>
-                  <li>Local support from Tech Ability</li>
-                  <li>Setup help available</li>
-                </ul>
-                <div class="mt-auto">
-                  <a class="btn btn-primary w-100" href="/contact.html" aria-label="Choose Tech Fibre Starter">Choose plan</a>
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Tech Fibre Starter</h3>
                 </div>
+                <p class="display-6 fw-bold mb-1">$86<span class="fs-6 text-secondary"> per month</span></p>
+                <p class="small text-secondary mb-3">Router hire, +$5 per month</p>
+                <ul class="list-unstyled small mb-4">
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Great for email and browsing</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Local support team</li>
+                </ul>
+                <a class="btn btn-primary mt-auto" href="/contact.html">I want this</a>
               </div>
             </article>
           </div>
 
           <!-- Essential -->
           <div class="col-md-6 col-lg-4">
-            <article class="card card-service h-100 shadow-sm border-primary" aria-labelledby="plan-essential">
+            <article class="card card-service h-100 shadow-sm border-primary">
               <div class="card-body d-flex flex-column">
-                <h3 id="plan-essential" class="h5 mb-2 d-flex align-items-center gap-2">
-                  <i class="bi bi-stars text-primary" aria-hidden="true"></i> Tech Fibre Essential
-                </h3>
-                <p class="mb-1">
-                  <span class="display-6 fw-bold">$100</span>
-                  <span class="text-secondary"> per month</span>
-                </p>
-                <p class="small text-secondary mb-3">(with router hire, $105 per month)</p>
-                <ul class="small mb-4 ps-3">
-                  <li>Bring your own router, or hire one for $5 per month</li>
-                  <li>Local support from Tech Ability</li>
-                  <li>Setup help available</li>
-                </ul>
-                <div class="mt-auto">
-                  <a class="btn btn-primary w-100" href="/contact.html" aria-label="Choose Tech Fibre Essential">Choose plan</a>
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary text-white"><i class="bi bi-stars" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Tech Fibre Essential</h3>
                 </div>
+                <p class="display-6 fw-bold mb-1">$100<span class="fs-6 text-secondary"> per month</span></p>
+                <p class="small text-secondary mb-3">Router hire, +$5 per month</p>
+                <ul class="list-unstyled small mb-4">
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Stream HD on multiple devices</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Good for families</li>
+                </ul>
+                <a class="btn btn-primary mt-auto" href="/contact.html">I want this</a>
               </div>
             </article>
           </div>
 
           <!-- Fast -->
           <div class="col-md-6 col-lg-4">
-            <article class="card card-service h-100 shadow-sm" aria-labelledby="plan-fast">
+            <article class="card card-service h-100 shadow-sm">
               <div class="card-body d-flex flex-column">
-                <h3 id="plan-fast" class="h5 mb-2 d-flex align-items-center gap-2">
-                  <i class="bi bi-speedometer2 text-primary" aria-hidden="true"></i> Tech Fibre Fast
-                </h3>
-                <p class="mb-1">
-                  <span class="display-6 fw-bold">$120</span>
-                  <span class="text-secondary"> per month</span>
-                </p>
-                <p class="small text-secondary mb-3">(with router hire, $125 per month)</p>
-                <ul class="small mb-4 ps-3">
-                  <li>Bring your own router, or hire one for $5 per month</li>
-                  <li>Local support from Tech Ability</li>
-                  <li>Setup help available</li>
-                </ul>
-                <div class="mt-auto">
-                  <a class="btn btn-primary w-100" href="/contact.html" aria-label="Choose Tech Fibre Fast">Choose plan</a>
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-speedometer2" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Tech Fibre Fast</h3>
                 </div>
+                <p class="display-6 fw-bold mb-1">$120<span class="fs-6 text-secondary"> per month</span></p>
+                <p class="small text-secondary mb-3">Router hire, +$5 per month</p>
+                <ul class="list-unstyled small mb-4">
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Fast downloads and 4K streaming</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Best for power users</li>
+                </ul>
+                <a class="btn btn-primary mt-auto" href="/contact.html">I want this</a>
               </div>
             </article>
           </div>
         </div>
 
-        <p class="small text-secondary mt-3 text-center">
-          Router hire is optional, $5 per month. If you already have a router, you can bring your own.
-        </p>
+        <p class="small text-secondary mt-3 text-center">All prices include GST. Router hire adds 5 dollars per month if you choose to hire.</p>
       </div>
     </section>
 
@@ -181,15 +149,10 @@
     <section class="py-6" aria-labelledby="speedtest-heading">
       <div class="container">
         <div class="text-center mb-3">
-          <h2 id="speedtest-heading" class="fw-bold">Test your internet speed</h2>
-          <p class="text-secondary mb-0">This tool opens in the page. If it does not load, use the link below.</p>
-          <p class="visually-hidden">
-            Open the speed test in a new tab,
-            <a href="https://techability.speedtestcustom.com">techability.speedtestcustom.com</a>.
-          </p>
+          <h2 id="speedtest-heading" class="fw-bold">Test your speed</h2>
+          <p class="text-secondary mb-0">The test runs in your browser. It adapts to your screen size.</p>
         </div>
 
-        <!-- Bootstrap responsive ratio wrapper -->
         <div class="card shadow-sm border-0">
           <div class="card-body">
             <div class="ratio ratio-16x9">
@@ -197,35 +160,25 @@
                 src="https://techability.speedtestcustom.com"
                 title="Speed test"
                 loading="lazy"
-                referrerpolicy="no-referrer"
-                allow="fullscreen"
-                style="border: 0;">
-              </iframe>
+                allowfullscreen
+              ></iframe>
             </div>
           </div>
         </div>
 
-        <p class="small text-secondary mt-3 text-center">
-          Results depend on your device, your Wi-Fi, and your connection. For accurate results, use a wired connection if possible.
-        </p>
       </div>
     </section>
-
   </main>
 
-  <!-- Back to Top -->
-  <button id="back-to-top" class="btn" type="button" aria-label="Back to top" title="Back to top">
-    <span aria-hidden="true">↑</span>
-  </button>
+  <button id="back-to-top" class="btn" type="button" aria-label="Back to top" title="Back to top"><span aria-hidden="true">↑</span></button>
 
-  <!-- Footer with Shielded tool -->
-  <footer class="mt-5" aria-label="Footer">
+  <footer aria-label="Footer">
     <div class="container">
       <div class="row align-items-center gy-3">
         <div class="col-12 col-md">
           <p class="mb-0">
             <a class="link-light" href="https://www.techability.co.nz">Tech Ability</a>
-            <span class="text-white-50">, Christchurch, New Zealand</span>
+            <span class="text-secondary">, Christchurch, New Zealand</span>
           </p>
         </div>
         <div class="col-12 col-md-auto">
@@ -241,30 +194,19 @@
 
     <script src="https://staticcdn.co.nz/embed/embed.js"></script>
     <script>
-      (function () {
-        window.addEventListener('load', function () {
-          var frameName = new ds07o6pcmkorn({
-            openElementId: "#shielded-logo",
-            modalID: "modal"
-          });
-          frameName.init();
-        });
-      })();
+      window.addEventListener('load', function () {
+        var frameName = new ds07o6pcmkorn({ openElementId: "#shielded-logo", modalID: "modal" });
+        frameName.init();
+      });
     </script>
   </footer>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Back to Top -->
   <script>
     (function () {
       const btn = document.getElementById('back-to-top');
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      function toggleBtn() {
-        const scrolled = document.documentElement.scrollTop || document.body.scrollTop;
-        btn.style.display = scrolled > 100 ? 'block' : 'none';
-      }
+      function toggleBtn(){ const s = document.documentElement.scrollTop || document.body.scrollTop; btn.style.display = s > 100 ? 'block' : 'none'; }
       btn.addEventListener('click', function () {
         if (prefersReduced) { document.body.scrollTop = 0; document.documentElement.scrollTop = 0; }
         else { window.scrollTo({ top: 0, behavior: 'smooth' }); }
