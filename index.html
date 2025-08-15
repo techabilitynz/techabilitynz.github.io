@@ -55,7 +55,7 @@
           <ul class="navbar-nav ms-auto align-items-lg-center">
             <li class="nav-item"><a class="nav-link active" href="/index.html">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-            <li class="nav-item"><a class="nav-link active" href="/internet.html" aria-current="page">Internet</a></li>
+            <li class="nav-item"><a class="nav-link" href="/internet.html">Internet</a></li>
             <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
             <li class="nav-item ms-lg-3">
               <a class="btn btn-primary btn-sm px-3" href="/contact.html">
@@ -70,7 +70,21 @@
 
   <!-- Hero -->
   <section class="hero position-relative overflow-hidden" aria-labelledby="hero-heading">
+    <!-- Crisp, responsive hero image -->
+    <div class="hero-media" aria-hidden="true">
+      <img
+        src="https://i.postimg.cc/zvvGqpYt/banner.jpg"
+        alt=""
+        width="1300" height="300"
+        loading="eager" decoding="async"
+        srcset="https://i.postimg.cc/zvvGqpYt/banner.jpg 1200w"
+        sizes="(min-width: 1200px) 1200px, 100vw"
+      >
+    </div>
+
+    <!-- Keep, CSS can hide or leave as is -->
     <div class="hero-bg" aria-hidden="true"></div>
+
     <div class="container position-relative z-1">
       <div class="row align-items-center">
         <div class="col-lg-7 text-center text-lg-start">
@@ -176,7 +190,7 @@
             </article>
           </div>
 
-          <!-- New: Tech Fibre internet -->
+          <!-- Tech Fibre internet -->
           <div class="col-md-6 col-lg-3">
             <article class="card card-service h-100 shadow-sm">
               <div class="card-body">

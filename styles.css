@@ -11,7 +11,7 @@
   --ta-grad-1: 28, 100, 242; /* rgb for gradients */
   --ta-grad-2: 111, 66, 193;
   /* one source of truth for the banner image */
-  --ta-banner-img: url('https://i.ibb.co/5RTkWfn/Tech-Ability-Banner.jpg');
+  --ta-banner-img: url('https://i.postimg.cc/zvvGqpYt/banner.jpg');
 }
 
 html{ scroll-behavior: smooth; }
@@ -33,7 +33,6 @@ h1, h2, h3, .navbar-brand{ font-family: 'Oswald', Impact, Haettenschweiler, 'Ari
 /* Navbar */
 .navbar{ transition: background-color .2s ease, box-shadow .2s ease; }
 .navbar.sticky-top{ backdrop-filter: saturate(140%) blur(6px); }
-.navbar.bg-dark{ background-color: rgba(18, 21, 27, .9) !important; }
 
 /* Hero, crisp, no zoom */
 .hero{
@@ -241,4 +240,76 @@ p{ color: #5b6470; }
   inset: 0;
   background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.35) 60%, rgba(0,0,0,0));
   pointer-events: none;
+}
+
+/* ----- Force light look, no dark visuals anywhere ----- */
+
+/* Make the navbar light, even though HTML uses navbar-dark */
+.navbar.bg-dark{
+  background-color: #ffffff !important;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.navbar-dark .navbar-brand,
+.navbar-dark .nav-link{
+  color: #212529 !important;
+}
+.navbar-dark .nav-link.active{
+  color: #0d6efd !important;
+}
+.navbar-dark .navbar-toggler{
+  border-color: rgba(0,0,0,.15) !important;
+}
+.navbar-dark .navbar-toggler-icon{
+  /* same icon as Bootstrap light navbar */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* Light footer */
+footer{
+  background: #ffffff !important;
+  color: #212529 !important;
+}
+footer .link-light,
+footer a{
+  color: #0d6efd !important;
+}
+footer .text-white-50{
+  color: #6c757d !important;
+}
+
+/* Light banner letterbox */
+.banner{
+  background-color: #ffffff !important;
+}
+
+/* Hero, keep image crisp but remove heavy darkening */
+.hero-bg::before{
+  filter: blur(10px) brightness(0.95) saturate(1) !important;
+}
+.hero::after{
+  background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.18) 60%, rgba(0,0,0,0)) !important;
+}
+/* Crisp hero image, no blur, no dim, clean letterbox */
+.hero-bg{
+  background-image: var(--ta-banner-img) !important;
+  background-size: contain !important;     /* show full image */
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-color: #fff !important;       /* white bars on sides if any */
+  opacity: 1 !important;                   /* no fade */
+  filter: none !important;                 /* ensure no filter sneaks in */
+}
+.hero-bg::before{
+  content: none !important;                /* remove blurred fill layer */
+}
+.hero::after{
+  background: none !important;             /* remove overlay gradient */
+}
+
+/* Optional, keep the fallback banner crisp too */
+.banner{
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-color: #fff !important;
 }
