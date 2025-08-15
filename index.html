@@ -4,149 +4,251 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  
-  <!-- SSL Protected URL -->
+
+  <title>Tech Ability, tech support that just works</title>
+  <meta name="description" content="Friendly tech support for devices, computers, and smart homes. Christchurch based.">
+
+  <!-- Open Graph and Twitter -->
   <meta property="og:url" content="https://www.techability.co.nz/">
-  <!-- Social Preview Metadata -->
-  <meta property="og:title" content="Tech Ability - All Things tech">
+  <meta property="og:title" content="Tech Ability, All Things Tech">
   <meta property="og:type" content="website">
-  <meta property="og:description" content="Tech Ability - Tech Support">
-  <meta property="og:image" content="https://i.ibb.co/5RTkWfn/Tech-Ability-Banner.jpg"> 
-  <meta property="og:image:alt" content="Tech Ability Banner Image">
+  <meta property="og:description" content="Tech Ability, friendly tech help for devices, computers, and smart homes">
+  <meta property="og:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Abstract tech banner that represents connectivity">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tech Ability, All Things Tech">
+  <meta name="twitter:description" content="Tech Ability, friendly tech help for devices, computers, and smart homes">
+  <meta name="twitter:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
 
-  <title>Tech Ability</title>
-  <link href="https://fonts.googleapis.com/css?family=Oswald%3A400%2C600%2C700%7COpen%20Sans%3A400%2C600%2C700&display=swap" rel="stylesheet">
-  
+  <!-- Fonts and Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site CSS -->
   <link rel="stylesheet" href="styles.css">
-  
-  <!-- Back to Top Button Styles -->
-  <style>
-    #back-to-top {
-      position: fixed;
-      bottom: 40px;
-      right: 40px;
-      display: none;
-      background-color: #343a40;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      font-size: 24px;
-      text-align: center;
-      cursor: pointer;
-    }
-    #back-to-top:hover {
-      background-color: #007bff;
-    }
-  </style>
+  <link rel="icon" href="favicon.ico">
+  <meta name="theme-color" content="#0d6efd">
 </head>
-<body>
+<body class="bg-body">
 
-  <!-- Navigation bar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/index.html">Tech Ability</a> <!-- Link added to home -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/index.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/contact.html">Contact</a>
-          </li>
-        </ul>
+  <!-- Skip link -->
+  <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 px-3 py-2 bg-primary text-white rounded">Skip to main content</a>
+
+  <!-- Header -->
+  <header class="sticky-top shadow-sm" role="banner">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Primary">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html" aria-current="page">
+          <i class="bi bi-lightning-charge-fill text-primary" aria-hidden="true"></i>
+          <span class="fw-semibold">Tech Ability</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="navbarNav" class="collapse navbar-collapse">
+          <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item"><a class="nav-link active" href="/index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+            <li class="nav-item ms-lg-3">
+              <a class="btn btn-primary btn-sm px-3" href="/contact.html">
+                <i class="bi bi-chat-dots me-1" aria-hidden="true"></i> Contact
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero position-relative overflow-hidden" aria-labelledby="hero-heading">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="container position-relative z-1">
+      <div class="row align-items-center">
+        <div class="col-lg-7 text-center text-lg-start">
+          <h1 id="hero-heading" class="display-5 fw-bold text-white lh-sm">
+            Tech help that is clear, fast, and friendly
+          </h1>
+          <p class="lead text-white-50 mt-3 mb-4">
+            Setup, troubleshooting, and smart home support. We keep your tech simple so you can get on with life.
+          </p>
+          <div class="d-flex gap-2 justify-content-center justify-content-lg-start">
+            <a href="/contact.html" class="btn btn-primary btn-lg">Book help</a>
+            <a href="#services" class="btn btn-outline-light btn-lg">View services</a>
+          </div>
+        </div>
       </div>
     </div>
-  </nav>
-
-  <!-- Banner section with alt attribute for accessibility -->
-  <div class="banner" aria-label="Tech Ability banner image"></div>
-
-  <!-- Welcome text -->
-  <div class="welcome-text" role="heading" aria-level="1">
-    Welcome to Tech Ability
-  </div>
-
-  <!-- Main content section -->
-  <section>
-    <h2>About Us</h2>
-    <p>Where innovation meets simplicity. At Tech Ability, we believe that cutting-edge technology should be accessible, intuitive, and enhance everyday life. Whether you're exploring smart home solutions, custom electronics, or tech consultancy, we’re here to provide expert guidance and hands-on support.</p>
-    <p>Discover solutions that work for you, simplify your tech needs, and unlock new possibilities for your home, work, and beyond.</p>
-    <p>Explore our services and projects today!</p>
+    <svg class="position-absolute bottom-0 start-0 w-100 text-body" height="80" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="currentColor" d="M0,64 C240,32 480,32 720,48 C960,64 1200,64 1440,48 L1440,80 L0,80 Z"></path>
+    </svg>
   </section>
 
-  <!-- Services section with aria roles for better screen reader accessibility -->
-  <section>
-    <h2>Our Services</h2>
-    <div class="services" role="region" aria-labelledby="services-heading">
-      <div class="service-item" role="article">
-        <h3>Apple & Android Setup & Troubleshooting</h3>
-        <p>Need help with your Apple or Android device? We offer step-by-step support for everything from setup to troubleshooting, ensuring you get the most out of your technology.</p>
-      </div>
-      <div class="service-item" role="article">
-        <h3>Computer Maintenance</h3>
-        <p>Keep your computer running smoothly! We offer reliable maintenance services for desktops and laptops, covering everything from virus removal to hardware upgrades.</p>
-      </div>
-      <div class="service-item" role="article">
-        <h3>Smart Home Device Support</h3>
-        <p>We offer full support for all your smart home devices, from setup to troubleshooting. Whether it's smart lights, security cameras, or voice assistants, we help you integrate these technologies seamlessly into your home.</p>
+  <!-- Trust bar -->
+  <section class="py-3 bg-body-tertiary border-top border-bottom" aria-label="Key facts">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-center gap-4 text-secondary small">
+        <span class="d-inline-flex align-items-center gap-2">
+          <i class="bi bi-geo-alt" aria-hidden="true"></i> Christchurch based
+        </span>
+        <span class="vr d-none d-md-inline" aria-hidden="true"></span>
+        <span class="d-inline-flex align-items-center gap-2">
+          <i class="bi bi-clock-history" aria-hidden="true"></i> Same week bookings
+        </span>
+        <span class="vr d-none d-md-inline" aria-hidden="true"></span>
+        <span class="d-inline-flex align-items-center gap-2">
+          <i class="bi bi-people" aria-hidden="true"></i> Patient, accessible help
+        </span>
       </div>
     </div>
   </section>
 
-  <!-- Back to Top Button -->
-  <button id="back-to-top" aria-label="Back to Top">↑</button>
+  <!-- Main -->
+  <main id="main-content" tabindex="-1">
+    <!-- Services -->
+    <section id="services" class="py-6">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="fw-bold">Our Services</h2>
+          <p class="text-secondary mb-0">Clear options, fair pricing</p>
+        </div>
 
-  <!-- Footer section -->
-  <footer>
-    <p>
-      <a href="https://www.techability.co.nz">Tech Ability</a>
-      <a href="#" id="shielded-logo">
-        <img alt="shielded" src="https://shielded.co.nz/img/custom-logo.png">
-      </a>
-    </p>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <article class="card card-service h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-phone" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Apple and Android setup</h3>
+                </div>
+                <p class="text-secondary">New device setup, data transfer, backups, email, and apps. We make sure everything works.</p>
+                <ul class="list-unstyled small mb-4">
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Account and cloud setup</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Security and privacy checks</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Parental controls on request</li>
+                </ul>
+                <a class="stretched-link" href="/contact.html" aria-label="Book Apple and Android setup"></a>
+              </div>
+            </article>
+          </div>
+
+          <div class="col-md-6 col-lg-4">
+            <article class="card card-service h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-pc-display" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Computer maintenance</h3>
+                </div>
+                <p class="text-secondary">Tune ups, cleanup, malware removal, and upgrades. Extend laptop and desktop life.</p>
+                <ul class="list-unstyled small mb-4">
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Backup and recovery plans</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> SSD and RAM upgrade advice</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Performance checks</li>
+                </ul>
+                <a class="stretched-link" href="/contact.html" aria-label="Book computer maintenance"></a>
+              </div>
+            </article>
+          </div>
+
+          <div class="col-md-6 col-lg-4">
+            <article class="card card-service h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-house-gear" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Smart home support</h3>
+                </div>
+                <p class="text-secondary">Setup and fix smart lights, cameras, and voice assistants. Smooth automation at home.</p>
+                <ul class="list-unstyled small mb-4">
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Wi-Fi and mesh tuning</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Camera and doorbell setup</li>
+                  <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i> Routines and accessibility tips</li>
+                </ul>
+                <a class="stretched-link" href="/contact.html" aria-label="Book smart home support"></a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="py-6">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10 col-xl-9">
+            <h2 class="fw-bold text-center">About Tech Ability</h2>
+            <p class="mt-3 text-center">
+              Innovation with simplicity in mind. We make technology accessible and useful at home and work. From setup to troubleshooting and training, we guide you step by step.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Back to Top -->
+  <button id="back-to-top" class="btn" type="button" aria-label="Back to top" title="Back to top"><span aria-hidden="true">↑</span></button>
+
+  <!-- Footer with Shielded tool -->
+  <footer aria-label="Footer">
+    <div class="container">
+      <div class="row align-items-center gy-3">
+        <div class="col-12 col-md">
+          <p class="mb-0">
+            <a class="link-light" href="https://www.techability.co.nz">Tech Ability</a>
+            <span class="text-white-50">, Christchurch, New Zealand</span>
+          </p>
+        </div>
+        <div class="col-12 col-md-auto">
+          <p class="mb-0 shielded">
+            <span class="me-2">Need a safe way to get help online</span>
+            <a href="#" id="shielded-logo" aria-label="Open Shielded site tool">
+              <img alt="Shielded site logo" src="https://shielded.co.nz/img/custom-logo.png">
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+
     <script src="https://staticcdn.co.nz/embed/embed.js"></script>
     <script>
       (function () {
-          window.onload = function(){
-              var frameName = new ds07o6pcmkorn({
-                  openElementId: "#shielded-logo",
-                  modalID: "modal",
-              });
-              frameName.init();
-          }
+        window.addEventListener('load', function () {
+          var frameName = new ds07o6pcmkorn({
+            openElementId: "#shielded-logo",
+            modalID: "modal"
+          });
+          frameName.init();
+        });
       })();
     </script>
   </footer>
 
   <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Back to Top Script -->
+  <!-- Back to Top, reduced motion support -->
   <script>
-    const backToTopButton = document.getElementById("back-to-top");
-
-    // Show the button when the user scrolls down 100px from the top
-    window.onscroll = function() {
-      if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
-        backToTopButton.style.display = "block";
-      } else {
-        backToTopButton.style.display = "none";
+    (function () {
+      const btn = document.getElementById('back-to-top');
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function toggleBtn() {
+        const scrolled = document.documentElement.scrollTop || document.body.scrollTop;
+        btn.style.display = scrolled > 100 ? 'block' : 'none';
       }
-    };
-
-    // Scroll to the top when the button is clicked
-    backToTopButton.addEventListener("click", function() {
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-    });
+      btn.addEventListener('click', function () {
+        if (prefersReduced) { document.body.scrollTop = 0; document.documentElement.scrollTop = 0; }
+        else { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
+      window.addEventListener('scroll', toggleBtn, { passive: true }); toggleBtn();
+    })();
   </script>
-
 </body>
 </html>

@@ -4,165 +4,307 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  
-  <!-- SSL Protected URL -->
-  <meta property="og:url" content="https://www.techability.co.nz/">
-  <!-- Social Preview Metadata -->
-  <meta property="og:title" content="Tech Ability - All Things tech">
-  <meta property="og:type" content="website">
-  <meta property="og:description" content="Tech Ability - Tech Support">
-  <meta property="og:image" content="https://i.ibb.co/5RTkWfn/Tech-Ability-Banner.jpg"> 
-  <meta property="og:image:alt" content="Tech Ability Banner Image">
 
-  <meta property="og:title" content="Tech Ability - Contact Us">
-  <meta property="og:type" content="website">
+  <title>Tech Ability, Contact us</title>
+  <meta name="description" content="Get in touch with Tech Ability, friendly tech support for devices, computers, and smart homes. Christchurch based.">
+
+  <!-- Open Graph and Twitter -->
   <meta property="og:url" content="https://www.techability.co.nz/contact">
-  <meta property="og:description" content="Get in touch with Tech Ability">
-  
-  <title>Tech Ability - Contact Us</title>
-  <link href="https://fonts.googleapis.com/css?family=Oswald%3A400%2C600%2C700%7COpen%20Sans%3A400%2C600%2C700&display=swap" rel="stylesheet">
-  
+  <meta property="og:title" content="Tech Ability, Contact us">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="Contact Tech Ability for accessible tech help">
+  <meta property="og:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Abstract tech banner that represents connectivity">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tech Ability, Contact us">
+  <meta name="twitter:description" content="Contact Tech Ability for accessible tech help">
+  <meta name="twitter:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
+
+  <!-- Fonts and Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="contact.css">
-  
-  <!-- Back to Top Button Styles -->
-  <style>
-    #back-to-top {
-      position: fixed;
-      bottom: 40px;
-      right: 40px;
-      display: none;
-      background-color: #343a40;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      font-size: 24px;
-      text-align: center;
-      cursor: pointer;
-    }
-    #back-to-top:hover {
-      background-color: #007bff;
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="favicon.ico">
+  <meta name="theme-color" content="#0d6efd">
 </head>
-<body>
+<body class="bg-body">
 
-  <!-- Navigation bar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/index.html">Tech Ability</a> <!-- Link added to home -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/index.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/contact.html">Contact</a>
-          </li>
-        </ul>
+  <!-- Skip link -->
+  <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 px-3 py-2 bg-primary text-white rounded">Skip to main content</a>
+
+  <!-- Header and primary navigation -->
+  <header class="sticky-top shadow-sm" role="banner">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Primary">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html" aria-current="page">
+          <i class="bi bi-lightning-charge-fill text-primary" aria-hidden="true"></i>
+          <span class="fw-semibold">Tech Ability</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="navbarNav" class="collapse navbar-collapse">
+          <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/index.html#services">Services</a></li>
+            <li class="nav-item"><a class="nav-link active" href="/contact.html" aria-current="page">Contact</a></li>
+            <li class="nav-item ms-lg-3">
+              <a class="btn btn-primary btn-sm px-3" href="tel:+64221843756">
+                <i class="bi bi-telephone me-1" aria-hidden="true"></i>
+                022 184 3756
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero position-relative overflow-hidden" aria-labelledby="contact-hero-heading">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="container position-relative z-1 py-5">
+      <div class="row align-items-center">
+        <div class="col-lg-8 mx-auto text-center">
+          <h1 id="contact-hero-heading" class="display-5 fw-bold text-white">Contact Tech Ability</h1>
+          <p class="lead text-white-50 mt-3 mb-0">
+            We offer friendly help that is accessible to everyone. Tell us how you prefer to communicate, phone, email, or text.
+          </p>
+        </div>
       </div>
     </div>
-  </nav>
+    <svg class="position-absolute bottom-0 start-0 w-100 text-body" height="80" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path fill="currentColor" d="M0,64 C240,32 480,32 720,48 C960,64 1200,64 1440,48 L1440,80 L0,80 Z"></path>
+    </svg>
+  </section>
 
-  <!-- Banner section with alt attribute for accessibility -->
-  <div class="banner" aria-label="Tech Ability banner image"></div>
+  <main id="main-content" tabindex="-1">
+    <!-- Quick contact cards -->
+    <section class="py-6" aria-label="Contact methods">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <article class="card card-service h-100 shadow-sm" aria-labelledby="card-call">
+              <div class="card-body">
+                <h2 id="card-call" class="h5 d-flex align-items-center gap-2">
+                  <i class="bi bi-telephone text-primary" aria-hidden="true"></i> Call or text
+                </h2>
+                <p class="mb-2">Phone, <a href="tel:+64221843756">022 184 3756</a></p>
+                <p class="mb-0 small text-secondary">If you prefer text only, say so in your first message.</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-md-4">
+            <article class="card card-service h-100 shadow-sm" aria-labelledby="card-email">
+              <div class="card-body">
+                <h2 id="card-email" class="h5 d-flex align-items-center gap-2">
+                  <i class="bi bi-envelope-paper text-primary" aria-hidden="true"></i> Email
+                </h2>
+                <p class="mb-0">
+                  <a href="mailto:sales@techability.co.nz">sales@techability.co.nz</a>
+                </p>
+              </div>
+            </article>
+          </div>
+          <div class="col-md-4">
+            <article class="card card-service h-100 shadow-sm" aria-labelledby="card-access">
+              <div class="card-body">
+                <h2 id="card-access" class="h5 d-flex align-items-center gap-2">
+                  <i class="bi bi-universal-access-circle text-primary" aria-hidden="true"></i> Accessibility options
+                </h2>
+                <ul class="small mb-0 ps-3">
+                  <li>Plain language, no jargon</li>
+                  <li>Phone, text, or email, your choice</li>
+                  <li>Screen reader friendly documents on request</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- Welcome text -->
-  <div class="welcome-text" role="heading" aria-level="1">
-    Contact Us
-  </div>
+    <!-- Team -->
+    <section class="py-6" aria-labelledby="team-heading">
+      <div class="container">
+        <div class="text-center mb-4">
+          <h2 id="team-heading" class="fw-bold">Meet our team</h2>
+          <p class="text-secondary mb-0">Real people who love making tech simple</p>
+        </div>
 
-  <!-- Main content section -->
-  <section>
-    <h2>Meet Our Team</h2>
+        <div class="row g-4">
+          <!-- Ricky -->
+          <div class="col-lg-4 col-md-6">
+            <article class="card h-100 shadow-sm" itemscope itemtype="http://schema.org/Person" aria-labelledby="ricky-name">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <img src="https://i.ibb.co/GcxfcDd/image.png"
+                       class="rounded-circle me-3" width="96" height="96"
+                       alt="Portrait of Ricky Reeves, CEO">
+                  <div>
+                    <h3 id="ricky-name" class="h5 mb-1" itemprop="name">Ricky Reeves, CEO</h3>
+                    <p class="small text-secondary mb-0" itemprop="jobTitle">Founder, accessibility lead</p>
+                  </div>
+                </div>
+                <p class="mt-3 mb-0">
+                  Diagnosed with cancer in 2006 which led to legal blindness, Ricky has deep expertise with screen readers and Apple accessibility. His goal is simple, make tech confidence possible for everyone.
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <!-- Thomas -->
+          <div class="col-lg-4 col-md-6">
+            <article class="card h-100 shadow-sm" itemscope itemtype="http://schema.org/Person" aria-labelledby="thomas-name">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <img src="https://i.ibb.co/Y83LJZP/image.png"
+                       class="rounded-circle me-3" width="96" height="96"
+                       alt="Portrait of Thomas Bernard, IT Admin">
+                  <div>
+                    <h3 id="thomas-name" class="h5 mb-1" itemprop="name">Thomas Bernard, IT Admin</h3>
+                    <p class="small text-secondary mb-0" itemprop="jobTitle">Web, tools, and customer support</p>
+                  </div>
+                </div>
+                <p class="mt-3 mb-0">
+                  Thomas looks after our site and systems, and helps customers by email and phone. He enjoys radio and Toastmasters.
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <!-- Jordan -->
+          <div class="col-lg-4 col-md-6">
+            <article class="card h-100 shadow-sm" itemscope itemtype="http://schema.org/Person" aria-labelledby="jordan-name">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <img src="https://i.ibb.co/ZXBX2WH/image.png"
+                       class="rounded-circle me-3" width="96" height="96"
+                       alt="Portrait of Jordan Langley, Weather enthusiast and tech specialist">
+                  <div>
+                    <h3 id="jordan-name" class="h5 mb-1" itemprop="name">Jordan Langley, Weather enthusiast and tech specialist</h3>
+                    <p class="small text-secondary mb-0" itemprop="jobTitle">Assistive tech and iPhone help</p>
+                  </div>
+                </div>
+                <p class="mt-3 mb-0">
+                  Jordan shares local weather updates on air and online, and supports people with low vision to use smart tech with confidence.
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Google Form embed -->
+    <section class="py-6" aria-labelledby="google-form-heading">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-lg-10 col-xl-9">
+            <div class="text-center mb-3">
+              <h2 id="google-form-heading" class="h4 fw-bold mb-2">Send us a message</h2>
+              <p class="mb-2">If you prefer email, write to <a href="mailto:sales@techability.co.nz">sales@techability.co.nz</a>.</p>
+              <p class="mb-0">If the form does not load, use this link, <a href="https://docs.google.com/forms/d/e/1FAIpQLSeIQnXNDbFKequA1KWCPQoktNr5515oF7DA_kICGuKuJgVEEA/viewform">open the Google Form</a>.</p>
+            </div>
+
+            <div class="card shadow-sm border-0">
+              <div class="card-body p-2 p-md-3">
+                <iframe
+                  src="https://docs.google.com/forms/d/e/1FAIpQLSeIQnXNDbFKequA1KWCPQoktNr5515oF7DA_kICGuKuJgVEEA/viewform?embedded=true"
+                  title="Contact form"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  class="w-100"
+                  style="height: 1600px; border: 0; display: block; margin: 0 auto; border-radius: .75rem;"
+                >
+                  Loading, please wait
+                </iframe>
+              </div>
+            </div>
+
+            <p class="small text-secondary mt-3 text-center">
+              Your details are used to reply to your request. We do not share your information with others.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Back to Top -->
+  <button id="back-to-top" class="btn" type="button" aria-label="Back to top" title="Back to top">
+    <span aria-hidden="true">↑</span>
+  </button>
+
+  <!-- Footer with Shielded tool -->
+  <footer class="mt-5" aria-label="Footer">
     <div class="container">
-      <div class="row">
-        <!-- Ricky Reeves - CEO -->
-        <div class="col-lg-4 col-md-6 mb-4">
-          <img src="https://i.ibb.co/GcxfcDd/image.png" class="img-fluid" alt="Ricky Reeves - CEO" width="150" height="150">
-          <h3>Ricky Reeves - CEO</h3>
-          <p>I am Ricky, the CEO and founder of Tech Ability.</p>
-          <p>In 2006, I was diagnosed with cancer that unfortunately resulted in legal blindness. However, my passion for technology has only intensified. With a focus on accessibility, I have honed my skills on Windows computers using screen readers and have since transitioned to Apple products, mastering their features and tricks.</p>
-          <p>My ultimate goal is to establish Tech Ability as the leading institution for individuals to learn a wide range of technology skills and confidently navigate the digital world.</p>
+      <div class="row align-items-center gy-3">
+        <div class="col-12 col-md">
+          <p class="mb-0">
+            <a class="link-light" href="https://www.techability.co.nz">Tech Ability</a>
+            <span class="text-white-50">, Christchurch, New Zealand</span>
+          </p>
         </div>
-        <!-- Thomas Bernard - IT Admin -->
-        <div class="col-lg-4 col-md-6 mb-4">
-          <img src="https://i.ibb.co/Y83LJZP/image.png" class="img-fluid" alt="Thomas Bernard - IT Admin" width="150" height="150">
-          <h3>Thomas Bernard - IT Admin</h3>
-          <p>As the IT Admin at Tech Ability, I manage our social media, website, and backend tools, ensuring everything runs smoothly behind the scenes. I'm also here to assist customers and respond to emails, always ready to help with any tech-related questions.</p>
-          <p>Outside of work, I'm passionate about amateur radio and host a weekly radio show on Plains FM. I also enjoy honing my public speaking skills as a member of Toastmasters.</p>
-        </div>
-        <!-- Jordan Langley - Weather Enthusiast & Tech Specialist -->
-        <div class="col-lg-4 col-md-6 mb-4">
-          <img src="https://i.ibb.co/ZXBX2WH/image.png" class="img-fluid" alt="Jordan Langley - Weather Enthusiast & Tech Specialist" width="150" height="150">
-          <h3>Jordan Langley – Weather Enthusiast & Tech Specialist</h3>
-          <p>I'm passionate about both weather and technology, and I love sharing local weather updates through Facebook and on the radio, including my show on Plains FM. Outside of weather reporting, I enjoy exploring the South Island by bus and taxi.</p>
-          <p>As someone who is legally blind with low vision, I have a deep understanding of the importance of adaptive technologies and assistive tools. I specialize in helping others with assistive devices, smart technology, and iPhones, ensuring everyone can stay connected and empowered through tech.</p>
+        <div class="col-12 col-md-auto">
+          <p class="mb-0 shielded">
+            <span class="me-2">Need a safe way to get help online</span>
+            <a href="#" id="shielded-logo" aria-label="Open Shielded site tool">
+              <img alt="Shielded site logo" src="https://shielded.co.nz/img/custom-logo.png">
+            </a>
+          </p>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- Contact details section -->
-  <section>
-    <h2>Contact Information</h2>
-    <p>Email: <a href="mailto:sales@techability.co.nz">sales@techability.co.nz</a> - General Inquiries</p>
-    <p>Contact us: <a href="tel:+64221843756">022 184 3756</a></p>
-  </section>
-
-  <!-- Back to Top Button -->
-  <button id="back-to-top" aria-label="Back to Top">↑</button>
-
-  <!-- Footer section -->
-  <footer>
-    <p>
-      <a href="https://www.techability.co.nz">Tech Ability</a>
-      <a href="#" id="shielded-logo">
-        <img alt="shielded" src="https://shielded.co.nz/img/custom-logo.png">
-      </a>
-    </p>
     <script src="https://staticcdn.co.nz/embed/embed.js"></script>
     <script>
       (function () {
-          window.onload = function(){
-              var frameName = new ds07o6pcmkorn({
-                  openElementId: "#shielded-logo",
-                  modalID: "modal",
-              });
-              frameName.init();
-          }
+        window.addEventListener('load', function () {
+          var frameName = new ds07o6pcmkorn({
+            openElementId: "#shielded-logo",
+            modalID: "modal"
+          });
+          frameName.init();
+        });
       })();
     </script>
   </footer>
 
   <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Back to Top Script -->
+  <!-- Back to Top -->
   <script>
-    const backToTopButton = document.getElementById("back-to-top");
+    (function () {
+      const btn = document.getElementById('back-to-top');
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Show the button when the user scrolls down 100px from the top
-    window.onscroll = function() {
-      if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
-        backToTopButton.style.display = "block";
-      } else {
-        backToTopButton.style.display = "none";
+      function toggleBtn() {
+        const scrolled = document.documentElement.scrollTop || document.body.scrollTop;
+        btn.style.display = scrolled > 100 ? 'block' : 'none';
       }
-    };
 
-    // Scroll to the top when the button is clicked
-    backToTopButton.addEventListener("click", function() {
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-    });
+      btn.addEventListener('click', function () {
+        if (prefersReduced) {
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      window.addEventListener('scroll', toggleBtn, { passive: true });
+      toggleBtn();
+    })();
   </script>
-
 </body>
 </html>
