@@ -377,3 +377,4 @@ a:not(.btn):focus-visible{ outline: var(--focus-ring); outline-offset: 2px; bord
 .hero.focus-top    { --hero-focus-y: 25%; }
 .hero.focus-center { --hero-focus-y: 50%; }
 .hero.focus-bottom { --hero-focus-y: 75%; }
+  
