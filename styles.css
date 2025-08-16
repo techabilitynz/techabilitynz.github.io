@@ -16,6 +16,8 @@ body{
   font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background-color: var(--ta-surface);
   color: var(--ta-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 h1,h2,h3,.navbar-brand{
   font-family: 'Oswald', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
@@ -23,11 +25,24 @@ h1,h2,h3,.navbar-brand{
 .py-6{ padding-top: 4rem; padding-bottom: 4rem; }
 @media (min-width: 992px){ .py-6{ padding-top: 5rem; padding-bottom: 5rem; } }
 
-/* Navbar, light */
+/* Navbar (force light look everywhere) */
 .navbar{ transition: background-color .2s ease, box-shadow .2s ease; }
+/* Pages that already use bg-white */
 .navbar.bg-white{
   background-color: #fff !important;
   border-bottom: 1px solid var(--ta-border);
+}
+/* Pages still using navbar-dark bg-dark: make them light */
+.navbar.bg-dark{
+  background-color: #fff !important;
+  border-bottom: 1px solid var(--ta-border);
+}
+.navbar-dark .navbar-brand,
+.navbar-dark .nav-link{ color: var(--ta-text) !important; }
+.navbar-dark .nav-link.active{ color: var(--ta-primary) !important; }
+.navbar-dark .navbar-toggler{ border-color: rgba(0,0,0,.15) !important; }
+.navbar-dark .navbar-toggler-icon{
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0,0,0,0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22' /%3e%3c/svg%3e") !important;
 }
 
 /* Fancy tech divider used under hero */
@@ -38,7 +53,7 @@ h1,h2,h3,.navbar-brand{
   color: inherit;
 }
 
-/* Hero background, crisp image handled in HTML with <img>. This adds a subtle vibe. */
+/* Hero (image provided via HTML <img> for sharpness) */
 .hero{
   position: relative;
   overflow: hidden;
@@ -46,17 +61,17 @@ h1,h2,h3,.navbar-brand{
     radial-gradient(1200px 400px at 20% 10%, rgba(13,110,253,.08), transparent 60%),
     linear-gradient(160deg, rgba(13,110,253,.06), rgba(111,66,193,.06));
 }
-
-/* If you use a hero media <img>, this keeps it sharp and responsive */
+/* Keep banner image crisp and never upscale */
 .hero-media{
   position: relative;
   z-index: 0;
 }
 .hero-media img{
   display: block;
-  width: min(100%, 1200px);   /* never upscale past native width, stays sharp */
+  width: min(100%, 1200px); /* never upscale past native width */
   height: auto;
   margin-inline: auto;
+  image-rendering: auto;
 }
 
 /* Gentle overall shade for contrast */
@@ -79,103 +94,11 @@ h1,h2,h3,.navbar-brand{
   padding: clamp(1rem, 4vw, 3rem);
 }
 
-/* ---- Readability: shadow box directly behind hero text, no HTML changes needed ---- */
+/* Readability: shadow box directly behind hero text (no HTML changes) */
 .hero h1,
 .hero .lead{
   color: #fff;
   text-shadow: 0 2px 16px rgba(0,0,0,.35);
-  /* the box behind the text */
   background: rgba(0,0,0,.55);
   padding: .35em .65em;
-  border-radius: .75rem;
-  box-shadow: 0 16px 40px rgba(0,0,0,.35);
-  /* keep the box on each line if text wraps */
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-
-/* Stack spacing in hero */
-.hero h1{ margin-bottom: .6rem; }
-.hero .lead{ margin-bottom: 1rem; }
-
-/* Make outline buttons readable on banner */
-.hero .btn-outline-light,
-.hero .btn-outline-secondary{
-  border-color: rgba(255,255,255,.95) !important;
-  color: #fff !important;
-}
-.hero .btn-outline-light:hover,
-.hero .btn-outline-secondary:hover{
-  background: rgba(255,255,255,.14) !important;
-  color: #fff !important;
-}
-
-/* Cards */
-.card-service{
-  border: 1px solid var(--ta-border);
-  border-radius: 1rem;
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  background: #fff;
-}
-.card-service:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(0,0,0,.08);
-  border-color: rgba(13,110,253,.25);
-}
-.service-icon{
-  width: 44px; height: 44px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: .75rem; font-size: 1.25rem;
-}
-
-/* Sections */
-section{
-  background: #fff;
-  border-radius: .75rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,.06);
-  padding: 2rem;
-}
-section + section{ margin-top: 1.25rem; }
-.text-secondary{ color: var(--ta-muted) !important; }
-
-/* Footer, light */
-footer{
-  background: #fff;
-  color: var(--ta-text);
-  padding: 2.25rem 0;
-  margin-top: 3rem;
-  border-top: 1px solid var(--ta-border);
-}
-footer a{ color: var(--ta-primary); text-decoration: none; }
-footer a:hover{ text-decoration: underline; }
-footer .shielded{ display: inline-flex; align-items: center; gap: .5rem; }
-footer .shielded img{ height: 48px; width: 48px; object-fit: contain; }
-/* Footer brand link same colour as surrounding text */
-footer .link-light{
-  color: var(--ta-muted) !important;      /* same grey as .text-secondary */
-  text-decoration: none;
-}
-footer .link-light:hover{
-  color: var(--ta-text) !important;       /* darker on hover */
-  text-decoration: underline;
-}
-
-
-/* Back to top */
-#back-to-top{
-  position: fixed; right: 1rem; bottom: 1rem; z-index: 1030; display: none;
-  width: 48px; height: 48px; border: 0; border-radius: 50%;
-  background-color: #343a40; color: #fff; font-size: 22px; line-height: 48px; text-align: center;
-  cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,.18);
-  transition: transform .12s ease, background-color .12s ease, box-shadow .12s ease;
-}
-#back-to-top:hover{ transform: translateY(-2px); background-color: var(--ta-primary); box-shadow: 0 14px 28px rgba(13,110,253,.25); }
-
-/* Speedtest and Google Form containers */
-.ratio > iframe{ border: 0; border-radius: .75rem; }
-
-/* Accessibility focus */
-:focus-visible{ outline: 3px solid rgba(13,110,253,.65); outline-offset: 2px; }
-
-/* Helpers */
-.visually-hidden-focusable:focus{ position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  bor
