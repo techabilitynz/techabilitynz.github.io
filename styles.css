@@ -377,4 +377,31 @@ a:not(.btn):focus-visible{ outline: var(--focus-ring); outline-offset: 2px; bord
 .hero.focus-top    { --hero-focus-y: 25%; }
 .hero.focus-center { --hero-focus-y: 50%; }
 .hero.focus-bottom { --hero-focus-y: 75%; }
-    
+
+/* Speedtest: responsive height tuned for mobile/tablet */
+.ratio-speedtest{
+  --bs-aspect-ratio: 56.25%;     /* 16:9 on desktop */
+  border-radius: .75rem;
+  overflow: hidden;
+}
+.ratio-speedtest > iframe{
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* Roomier on tablets so buttons/labels aren’t cramped */
+@media (max-width: 991.98px){
+  .ratio-speedtest{ --bs-aspect-ratio: 85%; }
+}
+
+/* Tall on phones for comfortable tapping */
+@media (max-width: 576px){
+  .ratio-speedtest{ --bs-aspect-ratio: 120%; }
+}
+
+/* Extra-tall portrait phones */
+@media (max-aspect-ratio: 3/4){
+  .ratio-speedtest{ --bs-aspect-ratio: 135%; }
+}
