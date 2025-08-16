@@ -8,7 +8,6 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-
   <title>Tech Ability, Contact us</title>
   <meta name="description" content="Get in touch with Tech Ability, friendly tech support for devices, computers, and smart homes. Christchurch based.">
 
@@ -34,13 +33,23 @@
   <header class="sticky-top shadow-sm" role="banner">
     <nav class="navbar navbar-expand-lg navbar-light bg-white" aria-label="Primary">
       <div class="container">
+        <!-- Updated brand: logo + text (matches home) -->
         <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
-          <i class="bi bi-lightning-charge-fill text-primary" aria-hidden="true"></i>
-          <span class="fw-semibold">Tech Ability</span>
+          <img
+            src="https://i.postimg.cc/fLLRfK27/image.png?v=1"
+            alt="Tech Ability logo"
+            class="brand-logo"
+            height="36"
+            decoding="async"
+            fetchpriority="high"
+          />
+          <span class="brand-text">Tech Ability</span>
         </a>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation menu">
           <span class="navbar-toggler-icon"></span>
         </button>
+
         <div id="navbarNav" class="collapse navbar-collapse">
           <ul class="navbar-nav ms-auto align-items-lg-center">
             <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
@@ -68,7 +77,7 @@
       <div class="row">
         <div class="col-lg-9 mx-auto">
           <h1 id="contact-hero-heading" class="display-5 fw-bold">Contact Tech Ability</h1>
-          <p class="lead mt-3 mb-0">We offer friendly help that is accessible to everyone. Tell us how you prefer to communicate, phone, email, or text.</p>
+          <p class="lead mt-3 mb-0">We offer friendly help that is accessible to everyone. Tell us how you prefer to communicate: phone, email, or text.</p>
         </div>
       </div>
     </div>
@@ -104,7 +113,7 @@
                 <h2 id="card-access" class="h5 d-flex align-items-center gap-2"><i class="bi bi-universal-access-circle text-primary" aria-hidden="true"></i> Accessibility options</h2>
                 <ul class="small mb-0 ps-3">
                   <li>Plain language, no jargon</li>
-                  <li>Phone, text, or email, your choice</li>
+                  <li>Phone, text, or email — your choice</li>
                   <li>Screen reader friendly documents on request</li>
                 </ul>
               </div>
@@ -114,7 +123,7 @@
       </div>
     </section>
 
-    <!-- Team bios, inserted here -->
+    <!-- Team bios -->
     <section class="py-6" aria-labelledby="team-heading">
       <div class="container">
         <div class="text-center mb-4">
@@ -135,7 +144,7 @@
                   </div>
                 </div>
                 <p class="mt-3 mb-0">
-                  Diagnosed with cancer in 2006 which led to legal blindness, Ricky has deep expertise with screen readers and Apple accessibility. His goal is simple, make tech confidence possible for everyone.
+                  Diagnosed with cancer in 2006 which led to legal blindness, Ricky has deep expertise with screen readers and Apple accessibility. His goal is simple: make tech confidence possible for everyone.
                 </p>
               </div>
             </article>
@@ -248,4 +257,24 @@
     (function () {
       const btn = document.getElementById('back-to-top');
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      function toggleBtn(){ c
+
+      function toggleBtn() {
+        const s = document.documentElement.scrollTop || document.body.scrollTop;
+        btn.style.display = s > 100 ? 'block' : 'none';
+      }
+
+      btn.addEventListener('click', function () {
+        if (prefersReduced) {
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      window.addEventListener('scroll', toggleBtn, { passive: true });
+      toggleBtn();
+    })();
+  </script>
+</body>
+</html>
