@@ -74,21 +74,48 @@ h1,h2,h3,.navbar-brand{
   color: inherit;
 }
 
-/* Hero (image provided via HTML <img> for sharpness) */
+/* ===================== Hero (Responsive banner) ===================== */
 .hero{
   position: relative;
   overflow: hidden;
   background:
     radial-gradient(1200px 400px at 20% 10%, rgba(13,110,253,.08), transparent 60%),
     linear-gradient(160deg, rgba(13,110,253,.06), rgba(111,66,193,.06));
+  /* enough room for headings + CTAs */
+  min-height: clamp(420px, 62vh, 620px);
 }
-.hero-media{ position: relative; z-index: 0; }
+/* Prefer dynamic viewport units when available */
+@supports (height: 100svh){
+  .hero{ min-height: clamp(420px, 62svh, 620px); }
+}
+@supports (height: 100dvh){
+  .hero{ min-height: clamp(420px, 62dvh, 620px); }
+}
+
+/* Fill hero with the banner image, like a background */
+.hero-media{
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none; /* never block taps */
+}
 .hero-media img{
-  display: block;
-  width: min(100%, 1200px); /* never upscale past native width */
-  height: auto;
-  margin-inline: auto;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;                         /* fill area, crop as needed */
+  object-position: var(--hero-focus-x, 50%) var(--hero-focus-y, 45%);
   image-rendering: auto;
+}
+
+/* Give a bit more vertical room on tablets/phones */
+@media (max-width: 991.98px){
+  .hero{ min-height: clamp(460px, 70svh, 720px); }
+}
+
+/* On very tall portrait screens, bias crop slightly upward */
+@media (max-aspect-ratio: 3/4){
+  .hero-media img{ object-position: 50% 32%; }
 }
 
 /* Gentle overall shade for contrast */
@@ -102,8 +129,7 @@ h1,h2,h3,.navbar-brand{
 
 /* Content overlay */
 .hero-content{
-  position: absolute;
-  inset: 0;
+  position: relative;  /* sits above the shade */
   z-index: 2;
   display: grid;
   place-items: center;
@@ -111,7 +137,11 @@ h1,h2,h3,.navbar-brand{
   padding: clamp(1rem, 4vw, 3rem);
 }
 
-/* Readability: shadow box directly behind hero text */
+/* Responsive hero text */
+.hero .display-5{ font-size: clamp(1.75rem, 6vw, 2.5rem); }
+.hero .lead{ font-size: clamp(1rem, 3.8vw, 1.25rem); }
+
+/* Readability: shadow box behind hero text */
 .hero h1,
 .hero .lead{
   color: #fff;
@@ -128,7 +158,30 @@ h1,h2,h3,.navbar-brand{
 .hero h1{ margin-bottom: .6rem; }
 .hero .lead{ margin-bottom: 1rem; }
 
-/* Make outline buttons readable on banner + fix “grey” look */
+/* CTA group: wrap + stack correctly across sizes */
+.hero .d-flex.gap-2.justify-content-center{
+  flex-wrap: wrap;
+  gap: .75rem 1rem;
+}
+.hero .d-flex.gap-2.justify-content-center .btn{
+  box-sizing: border-box;
+  min-width: 200px;          /* readable labels on tablets */
+  white-space: nowrap;
+}
+/* tablets/phones: full-width stacked buttons */
+@media (max-width: 991.98px){
+  .hero .d-flex.gap-2.justify-content-center{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero .d-flex.gap-2.justify-content-center .btn{ width: 100%; }
+}
+/* Ultra-small phones */
+@media (max-width: 375px){
+  .hero .d-flex.gap-2.justify-content-center .btn{ min-width: 0; }
+}
+
+/* Make outline buttons readable on banner + match blue */
 .hero .btn-outline-light,
 .hero .btn-outline-secondary{
   border-color: rgba(255,255,255,0.95) !important;
@@ -146,8 +199,15 @@ h1,h2,h3,.navbar-brand{
   outline: 3px solid rgba(255,255,255,.85);
   outline-offset: 2px;
 }
+.hero .btn-outline-secondary{
+  background-color: var(--ta-primary) !important;
+  border-color: var(--ta-primary) !important;
+  color: #fff !important;
+}
+.hero .btn-outline-secondary:hover{ filter: brightness(0.92); }
+.hero .btn-outline-secondary:focus-visible{ outline: var(--focus-ring); outline-offset: 2px; }
 
-/* Cards */
+/* ===================== Cards & Sections ===================== */
 .card-service{
   border: 1px solid var(--ta-border);
   border-radius: 1rem;
@@ -165,7 +225,6 @@ h1,h2,h3,.navbar-brand{
   border-radius: .75rem; font-size: 1.25rem;
 }
 
-/* Sections */
 section{
   background: #fff;
   border-radius: .75rem;
@@ -175,7 +234,7 @@ section{
 section + section{ margin-top: 1.25rem; }
 .text-secondary{ color: var(--ta-muted) !important; }
 
-/* Footer (light) */
+/* ===================== Footer (light) ===================== */
 footer{
   background: #fff;
   color: var(--ta-text);
@@ -199,17 +258,17 @@ footer .link-light:focus-visible{
   text-decoration: underline;
 }
 
-/* Back to top — small, on the right side of all pages */
+/* ===================== Back to top ===================== */
 #back-to-top{
   position: fixed;
   right: .6rem;
-  top: 50%;                 /* middle right on desktop */
+  top: 50%;
   bottom: auto;
   transform: translateY(-50%);
   z-index: 1030;
   display: none;
 
-  width: 40px; height: 40px; /* small */
+  width: 40px; height: 40px;
   border: 0; border-radius: 50%;
   background-color: #343a40;
   color: #fff;
@@ -231,10 +290,10 @@ footer .link-light:focus-visible{
   #back-to-top:hover{ transform: translateY(-2px); }
 }
 
-/* Speedtest and Google Form containers */
+/* ===================== Embeds ===================== */
 .ratio > iframe{ border: 0; border-radius: .75rem; }
 
-/* Accessibility: strong focus, better anchors, skip-link, and heading anchor offsets */
+/* ===================== Accessibility ===================== */
 :focus-visible{ outline: var(--focus-ring); outline-offset: 2px; }
 a:not(.btn):focus-visible{ outline: var(--focus-ring); outline-offset: 2px; border-radius: .25rem; }
 .visually-hidden-focusable:focus{
@@ -255,16 +314,7 @@ a:not(.btn):focus-visible{ outline: var(--focus-ring); outline-offset: 2px; bord
 /* Touch highlight (helps discoverability on mobile) */
 *{ -webkit-tap-highlight-color: rgba(13,110,253,.18); }
 
-/* ==== Make "View services" the same blue as Book help on the hero ==== */
-.hero .btn-outline-secondary{
-  background-color: var(--ta-primary) !important;
-  border-color: var(--ta-primary) !important;
-  color: #fff !important;
-}
-.hero .btn-outline-secondary:hover{ filter: brightness(0.92); }
-.hero .btn-outline-secondary:focus-visible{ outline: var(--focus-ring); outline-offset: 2px; }
-
-/* ==== Plans: hover effects & polish ==== */
+/* ===================== Plans & Prices ===================== */
 .plan-card{
   position: relative;
   border: 1px solid var(--ta-border);
@@ -292,7 +342,7 @@ a:not(.btn):focus-visible{ outline: var(--focus-ring); outline-offset: 2px; bord
 .plan-card .btn{ transition: transform .15s ease, box-shadow .15s ease; }
 .plan-card:hover .btn{ transform: translateY(-1px); box-shadow: 0 .5rem 1.25rem rgba(13,110,253,.35); }
 
-/* ==== Price number line (paired with JS that counts up) ==== */
+/* Price number line (paired with optional JS that counts up) */
 .price-line{ display:flex; align-items:baseline; gap:.35rem; }
 .price-symbol{ font-weight: 700; }
 .price-amount{ font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 700; line-height: 1; }
@@ -311,14 +361,19 @@ a:not(.btn):focus-visible{ outline: var(--focus-ring); outline-offset: 2px; bord
   100%{ opacity:1; transform: translateY(0) scale(1); }
 }
 
-/* Subtle, accessible speed badges */
+/* Speed badges */
 .badge.bg-primary-subtle{ background: rgba(13,110,253,.12) !important; color: #0d6efd !important; }
 .badge.bg-success-subtle{ background: rgba(25,135,84,.12) !important; color: #198754 !important; }
 
 /* Strong focus for all buttons/controls */
 .btn:focus-visible{ outline: var(--focus-ring); outline-offset: 2px; }
 
-/* Respect reduced motion */
+/* Respect reduced motion for plan animations */
 @media (prefers-reduced-motion: reduce){
   .plan-card, .plan-card *, .price-animate{ transition: none !important; animation: none !important; }
 }
+
+/* Optional: utility classes to quickly change the hero's focal point */
+.hero.focus-top    { --hero-focus-y: 25%; }
+.hero.focus-center { --hero-focus-y: 50%; }
+.hero.focus-bottom { --hero-focus-y: 75%; }
