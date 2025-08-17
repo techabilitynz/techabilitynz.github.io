@@ -1,37 +1,58 @@
-:root {
+/* =========================
+   Tech Ability, global CSS
+   ========================= */
+
+/* Theme */
+:root{
   --brand: #0a66ff;
+  --ink: #222;
+  --ink-2: #444;
+  --bg-soft: #f8f9fb;
+  --radius: .75rem;
+
+  --shadow-sm: 0 4px 12px rgba(0,0,0,.05);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.12);
+  --shadow-lg: 0 16px 32px rgba(0,0,0,.16);
+
+  --fast: .15s;
+  --med: .3s;
+  --slow: .6s;
   --focus: 3px solid #0a66ff;
 }
 
-/* Base */
-html, body {
+html, body{
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   margin: 0;
   padding: 0;
-  color: #222;
+  color: var(--ink);
   background-color: #fff;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-*:focus-visible {
+/* Focus style for keyboard users */
+*:focus-visible{
   outline: var(--focus);
   outline-offset: 2px;
 }
 
-/* Section spacing */
-.section-space {
+/* Section spacing utility */
+.section-space{
   padding-top: 4rem;
   padding-bottom: 4rem;
 }
-@media (min-width: 992px) {
-  .section-space {
+@media (min-width: 992px){
+  .section-space{
     padding-top: 6rem;
     padding-bottom: 6rem;
   }
 }
 
-/* Hero */
-.hero {
-  background: #f8f9fb;
+/* =========================
+   Hero
+   ========================= */
+.hero{
+  background: var(--bg-soft);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,97 +60,234 @@ html, body {
   flex-wrap: wrap;
 }
 
-.hero-box {
-  max-width: 600px;
-}
+.hero-box{ max-width: 600px; }
 
-.hero-box h1 {
-  font-weight: 600; /* medium, not heavy */
+.hero-box h1{
+  font-weight: 600;
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  color: #222;
+  color: var(--ink);
 }
 
-.hero-box p {
+.hero-box p{
   font-weight: 400;
   font-size: 1.125rem;
-  color: #444;
+  color: var(--ink-2);
   margin: 0;
 }
 
-.hero-box img {
+.hero-box img{
   width: 100%;
   height: auto;
   border-radius: .5rem;
-  box-shadow: 0 8px 20px rgba(0,0,0,.15);
+  box-shadow: var(--shadow-md);
+  transform: translateZ(0);
+  transition: transform var(--slow) ease, box-shadow var(--med) ease;
+  will-change: transform;
 }
 
-/* Service cards */
-.card-service {
+.hero-box img:hover{
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* =========================
+   Headings
+   ========================= */
+h2, h3, h4{
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 1rem;
+}
+
+/* =========================
+   Cards, plans
+   ========================= */
+.card-service,
+.card-hyper{
   background: #fff;
   border: 1px solid #eee;
-  border-radius: .75rem;
+  border-radius: var(--radius);
   padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,.05);
+  box-shadow: var(--shadow-sm);
   text-align: center;
+
+  /* motion */
+  transform: translateZ(0) rotateX(var(--tiltX, 0deg)) rotateY(var(--tiltY, 0deg));
+  transition: transform var(--med) ease, box-shadow var(--med) ease, border-color var(--med) ease, filter var(--med) ease;
+  will-change: transform, box-shadow, filter;
 }
 
-.card-service .service-icon {
+.card-service:hover,
+.card-hyper:hover{
+  transform: translateY(-6px) rotateX(var(--tiltX, 0deg)) rotateY(var(--tiltY, 0deg));
+  box-shadow: var(--shadow-md);
+  border-color: rgba(10,102,255,.35);
+}
+
+.card-service:focus-within,
+.card-hyper:focus-within{
+  box-shadow: 0 0 0 4px rgba(10,102,255,.12), var(--shadow-md);
+  border-color: rgba(10,102,255,.45);
+}
+
+/* Icon tile inside plan cards, keep icon colors unchanged */
+.card-service .service-icon,
+.card-hyper .service-icon{
   width: 44px;
   height: 44px;
   display: inline-grid;
   place-items: center;
   border-radius: .5rem;
   font-size: 1.25rem;
+
+  /* keep original colors */
   background: var(--brand);
   color: #fff;
-  margin-bottom: 1rem;
+
+  /* motion only, no color changes */
+  transition: transform var(--med) ease, filter var(--med) ease;
+  will-change: transform, filter;
 }
 
-/* Headings */
-h2, h3, h4 {
+.card-service:hover .service-icon,
+.card-hyper:hover .service-icon{
+  transform: translateZ(12px) scale(1.06);
+  filter: drop-shadow(0 6px 14px rgba(10,102,255,.25));
+}
+
+/* Speed badges wrap nicely */
+.card-service .badge,
+.card-hyper .badge{
   font-weight: 600;
-  color: #222;
-  margin-bottom: 1rem;
+  letter-spacing: .2px;
 }
 
-/* Footer */
-footer {
+/* Prices pop a little on hover */
+.card-service:hover .display-6,
+.card-hyper:hover .display-6{
+  transform: translateZ(0) scale(1.02);
+  transition: transform var(--fast) ease;
+}
+
+/* =========================
+   Hyperfibre extras
+   ========================= */
+.card-hyper{
+  position: relative;
+  overflow: hidden;
+}
+.card-hyper::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(200px 120px at var(--mx, 50%) var(--my, 50%), rgba(10,102,255,.08), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--med) ease;
+}
+.card-hyper:hover::after{ opacity: 1; }
+
+.hyper-note{
+  font-size: .9375rem;
+  color: var(--ink-2);
+}
+
+/* =========================
+   Internet page, speed test
+   ========================= */
+.speedtest-widget{
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+.speedtest-frame{
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow-sm);
+  transform: translateZ(0);
+  transition: box-shadow var(--med) ease, transform var(--med) ease;
+  will-change: transform, box-shadow;
+}
+.speedtest-frame:hover{
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+.speedtest-frame > div{ /* wrapper from widget snippet */
+  position: absolute;
+  inset: 0;
+}
+.speedtest-frame iframe{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.speedtest-credit{
+  margin-top: .75rem;
+  font-size: .9375rem;
+  color: var(--ink-2);
+}
+
+/* =========================
+   Footer
+   ========================= */
+footer{
   background: #f1f1f1;
   padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-footer .footer-left {
+footer .footer-left{
   text-align: left;
   color: #555;
   font-weight: 400;
 }
-footer .footer-left a {
+footer .footer-left a{
   color: #000;
   text-decoration: none;
   font-weight: 600;
 }
-footer .footer-right {
+footer .footer-right{
   text-align: right;
   font-weight: 500;
   color: #111;
 }
 
-/* Back to top button, hidden */
-#back-to-top {
-  display: none !important;
+/* Back to top, hidden by request */
+#back-to-top{ display: none !important; }
+
+/* =========================
+   Reveal on scroll utility
+   ========================= */
+.reveal{
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--med) ease, transform var(--med) ease;
+  will-change: opacity, transform;
+}
+.reveal.is-visible{
+  opacity: 1;
+  transform: none;
 }
 
-/* Center Bootstrap card contents on contact page, remove bullets */
-.card.card-service .card-body {
+/* =========================
+   Contact card helpers, keep centered and no bullets
+   ========================= */
+.card.card-service .card-body{
   display: flex;
   flex-direction: column;
-  align-items: center;  /* center content */
-  text-align: center;   /* center text */
+  align-items: center;
+  text-align: center;
 }
-.card.card-service h2 {
+.card.card-service h2{
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,34 +295,30 @@ footer .footer-right {
   width: 100%;
   margin-bottom: .75rem;
 }
-.card.card-service ul {
+.card.card-service ul{
   list-style: none;
   padding: 0;
   margin: .25rem 0 0;
   text-align: center;
 }
-.card.card-service ul li {
-  margin: .25rem 0;
-}
+.card.card-service ul li{ margin: .25rem 0; }
 
-/* OpenSpeedTest widget block */
-.speedtest-widget { text-align: center; }
-.speedtest-frame {
-  max-width: 900px;
-  margin: 0 auto .75rem;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  background: #fff;
+/* =========================
+   Motion safe, respect user settings
+   ========================= */
+@media (prefers-reduced-motion: reduce){
+  *{
+    animation: none !important;
+    transition: none !important;
+  }
+  .hero-box img,
+  .card-service,
+  .card-hyper,
+  .speedtest-frame{
+    transform: none !important;
+  }
+  .reveal{
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
-.speedtest-credit {
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 0.25rem;
-}
-.speedtest-credit a {
-  font-weight: 700;
-  color: #000;
-  text-decoration: none;
-}
-.speedtest-credit a:hover { text-decoration: underline; }
