@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tech Ability, clear and friendly tech support</title>
+  <meta name="description" content="Christchurch based tech support for devices, computers, and smart homes. Accessible help that just works.">
+
+  <!-- Social -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.techability.co.nz/">
+  <meta property="og:title" content="Tech Ability, All Things Tech">
+  <meta property="og:description" content="Friendly tech help for devices, computers, and smart homes">
+  <meta property="og:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Fonts and CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="favicon.ico">
+  <meta name="theme-color" content="#0a66ff">
+</head>
+<body>
+  <!-- Header -->
+  <header class="sticky-top bg-white">
+    <nav class="navbar navbar-expand-lg border-bottom" aria-label="Primary">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html" aria-current="page">
+          <img src="https://i.postimg.cc/fLLRfK27/image.png?v=1" alt="Tech Ability logo" height="36">
+          <span class="fw-semibold text-dark">Tech Ability</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"
+                aria-controls="nav" aria-expanded="false" aria-label="Toggle menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="nav" class="collapse navbar-collapse">
+          <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item"><a class="nav-link active" href="/index.html" aria-current="page">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+            <li class="nav-item"><a class="nav-link" href="/internet.html">Internet</a></li>
+            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+            <li class="nav-item ms-lg-3">
+              <a class="btn btn-primary btn-sm px-3" href="/contact.html">
+                <i class="bi bi-chat-dots me-1" aria-hidden="true"></i><span>Contact</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero section-space" role="region" aria-labelledby="hero-h">
+    <div class="container">
+      <div class="row align-items-center gy-5">
+        <div class="col-lg-6">
+          <h1 id="hero-h" class="display-5 fw-bold mb-3">
+            Tech help that is clear, fast, and friendly
+          </h1>
+          <p class="lead mb-4">
+            Setup, troubleshooting, and smart home support. We keep your tech simple so you can get on with life.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="/contact.html" class="btn btn-primary btn-lg">Book help</a>
+            <a href="#services" class="btn btn-primary btn-lg">View services</a>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="hero-box">
+            <img src="https://i.postimg.cc/zvvGqpYt/banner.jpg"
+                 alt="Tech Ability banner showing connectivity"
+                 class="img-fluid rounded shadow">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <main id="main" tabindex="-1">
+    <section id="services" class="section-space">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="fw-bold">Our Services</h2>
+          <p class="text-secondary mb-0">Clear options, fair pricing</p>
+        </div>
+
+        <div class="row g-4">
+          <!-- Service card 1 -->
+          <div class="col-md-6 col-lg-3">
+            <article class="card card-service h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-phone" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Apple and Android setup</h3>
+                </div>
+                <p class="text-secondary">New device setup, data transfer, backups, email, and apps.</p>
+                <a class="stretched-link" href="/contact.html" aria-label="Book Apple and Android setup"></a>
+              </div>
+            </article>
+          </div>
+          <!-- Service card 2 -->
+          <div class="col-md-6 col-lg-3">
+            <article class="card card-service h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-pc-display" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Computer maintenance</h3>
+                </div>
+                <p class="text-secondary">Tune ups, cleanup, malware removal, and upgrades.</p>
+                <a class="stretched-link" href="/contact.html" aria-label="Book computer maintenance"></a>
+              </div>
+            </article>
+          </div>
+          <!-- Service card 3 -->
+          <div class="col-md-6 col-lg-3">
+            <article class="card card-service h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-house-gear" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Smart home support</h3>
+                </div>
+                <p class="text-secondary">Setup and fix smart lights, cameras, and voice assistants.</p>
+                <a class="stretched-link" href="/contact.html" aria-label="Book smart home support"></a>
+              </div>
+            </article>
+          </div>
+          <!-- Service card 4 -->
+          <div class="col-md-6 col-lg-3">
+            <article class="card card-service h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="service-icon bg-primary-subtle text-primary"><i class="bi bi-router" aria-hidden="true"></i></div>
+                  <h3 class="h5 ms-3 mb-0">Tech Fibre internet</h3>
+                </div>
+                <p class="text-secondary">Simple monthly plans with Christchurch based support.</p>
+                <a class="btn btn-primary w-100" href="/internet.html" aria-label="View Tech Fibre plans">View plans</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="section-space">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10 col-xl-9 text-center">
+            <h2 class="fw-bold">About Tech Ability</h2>
+            <p class="mt-3">
+              Innovation with simplicity in mind. We make technology accessible and useful at home and work,
+              from setup to troubleshooting and training, we guide you step by step.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Back to Top -->
+  <button id="back-to-top" class="btn" type="button" aria-label="Back to top" title="Back to top">
+    <span aria-hidden="true">↑</span>
+  </button>
+
+  <!-- Footer -->
+  <footer role="contentinfo" aria-label="Footer">
+    <div class="container py-4">
+      <div class="row align-items-center gy-3">
+        <div class="col-12 col-md">
+          <p class="mb-0">
+            <a class="fw-bold text-dark" href="https://www.techability.co.nz">Tech Ability</a>
+            <span class="text-secondary">, Christchurch, New Zealand</span>
+          </p>
+        </div>
+        <div class="col-12 col-md-auto">
+          <p class="mb-0 shielded">
+            <span class="me-2">Need a safe way to get help online</span>
+            <!-- Shielded logo opens modal when script loads -->
+            <a href="https://shielded.co.nz" id="shielded-logo" aria-label="Open the Shielded site tool" rel="nofollow">
+              <img alt="Shielded site logo" src="https://shielded.co.nz/img/custom-logo.png" width="40" height="40">
+            </a>
+            <!-- Fallback button if the script is blocked -->
+            <a href="https://shielded.co.nz" id="shielded-fallback" class="btn btn-outline-secondary btn-sm ms-2" hidden>
+              Open Shielded
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="scripts.js"></script>
+
+  <!-- Shielded widget with fallback -->
+  <script src="https://staticcdn.co.nz/embed/embed.js" async></script>
+  <script>
+    (function () {
+      function initShielded() {
+        try {
+          if (typeof ds07o6pcmkorn === "function") {
+            var widget = new ds07o6pcmkorn({ openElementId: "#shielded-logo", modalID: "modal" });
+            widget.init();
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      }
+      function showFallback() {
+        var fb = document.getElementById("shielded-fallback");
+        if (fb) fb.hidden = false;
+      }
+      if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(function () { if (!initShielded()) showFallback(); }, 300);
+      } else {
+        window.addEventListener("DOMContentLoaded", function () {
+          setTimeout(function () { if (!initShielded()) showFallback(); }, 300);
+        });
+      }
+      // If the script is blocked, reveal the fallback after a short delay
+      setTimeout(function () {
+        if (typeof ds07o6pcmkorn !== "function") showFallback();
+      }, 3000);
+    })();
+  </script>
+</body>
+</html>
