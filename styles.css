@@ -5,6 +5,10 @@
 
 html, body {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #222;
+  background-color: #fff;
 }
 
 *:focus-visible {
@@ -27,13 +31,48 @@ html, body {
 /* Hero */
 .hero {
   background: #f8f9fb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
+
+.hero-box {
+  max-width: 600px;
+}
+
+.hero-box h1 {
+  font-weight: 600;  /* softer than bold */
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #222;
+}
+
+.hero-box p {
+  font-weight: 400;  /* normal text */
+  font-size: 1.125rem;
+  color: #444;
+  margin: 0;
+}
+
 .hero-box img {
   width: 100%;
   height: auto;
+  border-radius: .5rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,.15);
 }
 
 /* Service cards */
+.card-service {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: .75rem;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,.05);
+  text-align: center;
+}
+
 .card-service .service-icon {
   width: 44px;
   height: 44px;
@@ -41,18 +80,32 @@ html, body {
   place-items: center;
   border-radius: .5rem;
   font-size: 1.25rem;
-}
-
-/* Back to top button */
-#back-to-top {
-  position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  display: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 999px;
   background: var(--brand);
   color: #fff;
-  box-shadow: 0 8px 16px rgba(0,0,0,.2);
+  margin-bottom: 1rem;
+}
+
+/* Headings */
+h2, h3, h4 {
+  font-weight: 600;   /* medium weight, not heavy black */
+  color: #222;
+  margin-bottom: 1rem;
+}
+
+/* Footer */
+footer {
+  background: #f1f1f1;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+footer p {
+  margin: 0;
+  color: #000;
+  font-weight: 700;  /* Tech Ability footer text bold */
+}
+
+/* Back to top button (hidden as requested) */
+#back-to-top {
+  display: none !important;
 }
