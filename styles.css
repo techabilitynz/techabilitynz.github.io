@@ -1,403 +1,58 @@
-/* Tech Ability, shared light theme */
-/* One file to style all pages. No dark mode anywhere. */
-
-:root{
-  color-scheme: light;
-  --ta-primary: #0d6efd;
-  --ta-text: #212529;
-  --ta-muted: #6c757d;
-  --ta-surface: #ffffff;
-  --ta-border: rgba(0,0,0,.08);
-
-  /* accessibility tuning */
-  --focus-ring: 3px solid rgba(13,110,253,.8);
-  --hero-text-bg: rgba(0,0,0,.58);         /* box behind hero text */
-  --hero-text-shadow: 0 2px 16px rgba(0,0,0,.38);
+:root {
+  --brand: #0a66ff;
+  --focus: 3px solid #0a66ff;
 }
 
-/* Base */
-html{ scroll-behavior: smooth; }
-body{
-  font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background-color: var(--ta-surface);
-  color: var(--ta-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-h1,h2,h3,.navbar-brand{
-  font-family: 'Oswald', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-}
-.py-6{ padding-top: 4rem; padding-bottom: 4rem; }
-@media (min-width: 992px){ .py-6{ padding-top: 5rem; padding-bottom: 5rem; } }
-
-/* Navbar (force light look everywhere) */
-.navbar{ transition: background-color .2s ease, box-shadow .2s ease; }
-.navbar.bg-white{
-  background-color: #fff !important;
-  border-bottom: 1px solid var(--ta-border);
-}
-/* Pages still using navbar-dark bg-dark: make them light */
-.navbar.bg-dark{
-  background-color: #fff !important;
-  border-bottom: 1px solid var(--ta-border);
-}
-.navbar-dark .navbar-brand,
-.navbar-dark .nav-link{ color: var(--ta-text) !important; }
-.navbar-dark .nav-link.active{ color: var(--ta-primary) !important; }
-.navbar-dark .navbar-toggler{ border-color: rgba(0,0,0,.15) !important; }
-.navbar-dark .navbar-toggler-icon{
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0,0,0,0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22' /%3e%3c/svg%3e") !important;
+html, body {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-/* Brand logo/text in navbar */
-.navbar .brand-logo{
-  display: block;
-  height: 36px;
-  width: auto;
-  object-fit: contain;
-}
-@media (min-width: 992px){
-  .navbar .brand-logo{ height: 38px; }
-}
-.navbar .brand-text{
-  line-height: 1;
-  font-weight: 600;
-  letter-spacing: .2px;
-  color: var(--ta-text);
-}
-
-/* Fancy tech divider used under hero */
-.section-divider{
-  display: block;
-  width: 100%;
-  height: 80px;
-  color: inherit;
-}
-
-/* ===================== Hero (Responsive banner) ===================== */
-.hero{
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(1200px 400px at 20% 10%, rgba(13,110,253,.08), transparent 60%),
-    linear-gradient(160deg, rgba(13,110,253,.06), rgba(111,66,193,.06));
-  /* enough room for headings + CTAs */
-  min-height: clamp(420px, 62vh, 620px);
-}
-@supports (height: 100svh){
-  .hero{ min-height: clamp(420px, 62svh, 620px); }
-}
-@supports (height: 100dvh){
-  .hero{ min-height: clamp(420px, 62dvh, 620px); }
-}
-
-/* Fill hero with the banner image, like a background */
-.hero-media{
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none; /* never block taps */
-}
-.hero-media img{
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;                         /* fill area, crop as needed */
-  object-position: var(--hero-focus-x, 50%) var(--hero-focus-y, 45%);
-  image-rendering: auto;
-}
-
-/* More vertical room on tablets/phones */
-@media (max-width: 991.98px){
-  .hero{ min-height: clamp(460px, 70svh, 720px); }
-}
-
-/* Very tall portrait screens: bias crop upward a bit */
-@media (max-aspect-ratio: 3/4){
-  .hero-media img{ object-position: 50% 32%; }
-}
-
-/* Phones: bias crop slightly to the LEFT so key content remains visible */
-@media (max-width: 575.98px){
-  .hero-media img{ object-position: 30% 45%; }
-}
-
-/* Gentle overall shade for contrast */
-.hero-shade{
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.18) 60%, rgba(0,0,0,0));
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Content overlay */
-.hero-content{
-  position: relative;  /* sits above the shade */
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  padding: clamp(1rem, 4vw, 3rem);
-}
-
-/* Responsive hero text */
-.hero .display-5{ font-size: clamp(1.75rem, 6vw, 2.5rem); }
-.hero .lead{ font-size: clamp(1rem, 3.8vw, 1.25rem); }
-
-/* Readability: shadow box behind hero text */
-.hero h1,
-.hero .lead{
-  color: #fff;
-  text-shadow: var(--hero-text-shadow);
-  background: var(--hero-text-bg);
-  padding: .35em .65em;
-  border-radius: .75rem;
-  box-shadow: 0 16px 40px rgba(0,0,0,.32);
-  backdrop-filter: blur(1.5px);
-  -webkit-backdrop-filter: blur(1.5px);
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-.hero h1{ margin-bottom: .6rem; }
-.hero .lead{ margin-bottom: 1rem; }
-
-/* CTA group: wrap + stack correctly across sizes */
-.hero .d-flex.gap-2.justify-content-center{
-  flex-wrap: wrap;
-  gap: .75rem 1rem;
-}
-.hero .d-flex.gap-2.justify-content-center .btn{
-  box-sizing: border-box;
-  min-width: 200px;          /* readable labels on tablets */
-  white-space: nowrap;
-}
-@media (max-width: 991.98px){
-  .hero .d-flex.gap-2.justify-content-center{
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .hero .d-flex.gap-2.justify-content-center .btn{ width: 100%; }
-}
-@media (max-width: 375px){
-  .hero .d-flex.gap-2.justify-content-center .btn{ min-width: 0; }
-}
-
-/* Make outline buttons readable on banner + match blue */
-.hero .btn-outline-light,
-.hero .btn-outline-secondary{
-  border-color: rgba(255,255,255,0.95) !important;
-  color: #fff !important;
-  background: transparent !important;
-}
-.hero .btn-outline-light:hover,
-.hero .btn-outline-secondary:hover{
-  background: rgba(255,255,255,.14) !important;
-  color: #fff !important;
-  border-color: #fff !important;
-}
-.hero .btn-outline-light:focus-visible,
-.hero .btn-outline-secondary:focus-visible{
-  outline: 3px solid rgba(255,255,255,.85);
+*:focus-visible {
+  outline: var(--focus);
   outline-offset: 2px;
 }
-.hero .btn-outline-secondary{
-  background-color: var(--ta-primary) !important;
-  border-color: var(--ta-primary) !important;
-  color: #fff !important;
-}
-.hero .btn-outline-secondary:hover{ filter: brightness(0.92); }
-.hero .btn-outline-secondary:focus-visible{ outline: var(--focus-ring); outline-offset: 2px; }
 
-/* ===================== Cards & Sections ===================== */
-.card-service{
-  border: 1px solid var(--ta-border);
-  border-radius: 1rem;
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  background: #fff;
+/* Section spacing */
+.section-space {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
 }
-.card-service:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(0,0,0,.08);
-  border-color: rgba(13,110,253,.25);
-}
-.service-icon{
-  width: 44px; height: 44px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: .75rem; font-size: 1.25rem;
-}
-
-section{
-  background: #fff;
-  border-radius: .75rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,.06);
-  padding: 2rem;
-}
-section + section{ margin-top: 1.25rem; }
-.text-secondary{ color: var(--ta-muted) !important; }
-
-/* ===================== Footer (light) ===================== */
-footer{
-  background: #fff;
-  color: var(--ta-text);
-  padding: 2.25rem 0;
-  margin-top: 3rem;
-  border-top: 1px solid var(--ta-border);
-}
-footer a{ color: var(--ta-primary); text-decoration: none; }
-footer a:hover{ text-decoration: underline; }
-footer .shielded{ display: inline-flex; align-items: center; gap: .5rem; }
-footer .shielded img{ height: 48px; width: 48px; object-fit: contain; }
-/* Footer brand “Tech Ability” clearly visible black */
-footer .link-light{
-  color: #000 !important;
-  font-weight: 600;
-  text-decoration: none;
-}
-footer .link-light:hover,
-footer .link-light:focus-visible{
-  color: #000 !important;
-  text-decoration: underline;
-}
-
-/* ===================== Back to top ===================== */
-#back-to-top{
-  position: fixed;
-  right: .6rem;
-  top: 50%;
-  bottom: auto;
-  transform: translateY(-50%);
-  z-index: 1030;
-  display: none;
-
-  width: 40px; height: 40px;
-  border: 0; border-radius: 50%;
-  background-color: #343a40;
-  color: #fff;
-  font-size: 18px; line-height: 40px; text-align: center;
-
-  cursor: pointer;
-  box-shadow: 0 10px 20px rgba(0,0,0,.18);
-  transition: transform .12s ease, background-color .12s ease, box-shadow .12s ease;
-}
-#back-to-top:hover{ transform: translateY(-50%) translateY(-2px); background-color: var(--ta-primary); box-shadow: 0 14px 28px rgba(13,110,253,.25); }
-#back-to-top:focus-visible{ outline: var(--focus-ring); outline-offset: 3px; }
-@media (max-width: 576px){
-  #back-to-top{
-    top: auto; bottom: .8rem;
-    transform: none;
+@media (min-width: 992px) {
+  .section-space {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
   }
-  #back-to-top:hover{ transform: translateY(-2px); }
 }
 
-/* ===================== Embeds ===================== */
-.ratio > iframe{ border: 0; border-radius: .75rem; }
-
-/* ===================== Accessibility ===================== */
-:focus-visible{ outline: var(--focus-ring); outline-offset: 2px; }
-a:not(.btn):focus-visible{ outline: var(--focus-ring); outline-offset: 2px; border-radius: .25rem; }
-.visually-hidden-focusable:focus{
-  position: static; width: auto; height: auto; overflow: visible; clip: auto;
+/* Hero */
+.hero {
+  background: #f8f9fb;
 }
-/* If you link to #ids, ensure content isn't hidden behind sticky navbar */
-:target{ scroll-margin-top: 80px; }
-
-/* Motion & contrast preferences */
-@media (prefers-reduced-motion: reduce){
-  *{ animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
-}
-@media (prefers-contrast: more){
-  :root{ --hero-text-bg: rgba(0,0,0,.72); }
-  .hero-shade{ background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.28) 60%, rgba(0,0,0,0)); }
-}
-
-/* Touch highlight (helps discoverability on mobile) */
-*{ -webkit-tap-highlight-color: rgba(13,110,253,.18); }
-
-/* ===================== Plans & Prices ===================== */
-.plan-card{
-  position: relative;
-  border: 1px solid var(--ta-border);
-  border-radius: 1rem;
-  background: #fff;
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-}
-.plan-card::after{
-  content:"";
-  position:absolute; inset:-1px;
-  border-radius: 1rem;
-  background: linear-gradient(120deg, rgba(13,110,253,.22), rgba(111,66,193,.22));
-  opacity: 0; pointer-events: none;
-  transition: opacity .2s ease;
-  z-index: -1;
-}
-.plan-card:hover{
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(0,0,0,.12);
-  border-color: rgba(13,110,253,.45);
-}
-.plan-card:hover::after{ opacity: .35; }
-.plan-card .service-icon{ transition: transform .2s ease; }
-.plan-card:hover .service-icon{ transform: scale(1.08) rotate(-2deg); }
-.plan-card .btn{ transition: transform .15s ease, box-shadow .15s ease; }
-.plan-card:hover .btn{ transform: translateY(-1px); box-shadow: 0 .5rem 1.25rem rgba(13,110,253,.35); }
-
-/* Price number line (paired with optional JS that counts up) */
-.price-line{ display:flex; align-items:baseline; gap:.35rem; }
-.price-symbol{ font-weight: 700; }
-.price-amount{ font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 700; line-height: 1; }
-.price-suffix{ font-size: .95rem; color: var(--ta-muted); }
-
-/* Simple appearance animation for prices on load */
-.price-animate{
-  opacity: 0;
-  transform: translateY(6px) scale(.98);
-  animation: pricePop .55s cubic-bezier(.2,.7,.3,1) .2s forwards;
-  will-change: transform, opacity;
-}
-@keyframes pricePop{
-  0%{ opacity:0; transform: translateY(6px) scale(.98); }
-  60%{ opacity:1; transform: translateY(0) scale(1.02); }
-  100%{ opacity:1; transform: translateY(0) scale(1); }
-}
-
-/* Speed badges */
-.badge.bg-primary-subtle{ background: rgba(13,110,253,.12) !important; color: #0d6efd !important; }
-.badge.bg-success-subtle{ background: rgba(25,135,84,.12) !important; color: #198754 !important; }
-
-/* Strong focus for all buttons/controls */
-.btn:focus-visible{ outline: var(--focus-ring); outline-offset: 2px; }
-
-/* Respect reduced motion for plan animations */
-@media (prefers-reduced-motion: reduce){
-  .plan-card, .plan-card *, .price-animate{ transition: none !important; animation: none !important; }
-}
-
-/* Optional focal utilities for the hero (X and Y) */
-.hero.focus-top     { --hero-focus-y: 25%; }
-.hero.focus-center  { --hero-focus-y: 50%; }
-.hero.focus-bottom  { --hero-focus-y: 75%; }
-.hero.focus-left    { --hero-focus-x: 30%; }
-.hero.focus-right   { --hero-focus-x: 70%; }
-
-/* ===================== Speedtest: responsive height ===================== */
-.ratio-speedtest{
-  --bs-aspect-ratio: 56.25%;     /* 16:9 on desktop */
-  border-radius: .75rem;
-  overflow: hidden;
-}
-.ratio-speedtest > iframe{
+.hero-box img {
   width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
+  height: auto;
 }
-@media (max-width: 991.98px){
-  .ratio-speedtest{ --bs-aspect-ratio: 85%; }
+
+/* Service cards */
+.card-service .service-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: .5rem;
+  font-size: 1.25rem;
 }
-@media (max-width: 576px){
-  .ratio-speedtest{ --bs-aspect-ratio: 120%; }
-}
-@media (max-aspect-ratio: 3/4){
-  .ratio-speedtest{ --bs-aspect-ratio: 135%; }
+
+/* Back to top button */
+#back-to-top {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  display: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(0,0,0,.2);
 }
