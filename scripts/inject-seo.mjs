@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
  * Auto SEO injector (no dependencies).
- * - Runs on every push & nightly.
- * - Upserts canonical, OG, Twitter, robots, JSON-LD.
- * - Uses page <title> and existing <meta name="description"> when available.
- * - Skips /beta, /backup, /Backups (any case) anywhere in the path.
+ * - Updates existing SEO tags where present; adds missing ones.
+ * - Normalizes: description, canonical, og:url/title/description/image/site_name/type,
+ *   twitter:card/title/description/image.
+ * - Keeps explicit "noindex" robots if present (won't override to index).
  * - Idempotent via <!-- AUTO-SEO-INJECT v1 --> markers.
+ * - Skips any path containing /beta, /backup, /Backups (case-insensitive).
  */
 
 import fs from "fs";
@@ -66,25 +67,18 @@ function walk(dir, out = []) {
 
 function urlFor(relPath) {
   const web = relPath.replace(/\\/g, "/");
-  if (/^index\.html$/i.test(web)) return "/";
-  if (/\/index\.html$/i.test(web)) return `/${web.replace(/\/index\.html$/i, "/")}`;
+  if (/^index\.html?$/i.test(web)) return "/";
+  if (/\/index\.html?$/i.test(web)) return `/${web.replace(/\/index\.html?$/i, "/")}`;
   return `/${web}`;
 }
 
-function getTitle(html) {
-  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  return m ? decode(m[1].trim()) : null;
-}
-
-function getDescription(html) {
-  const m = html.match(
-    /<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i
-  );
-  return m ? decode(m[1].trim()) : null;
-}
-
 function decode(s) {
-  return s.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"').replaceAll("&#39;", "'");
+  return s
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'");
 }
 function esc(s) {
   return s
@@ -94,28 +88,123 @@ function esc(s) {
     .replaceAll('"', "&quot;");
 }
 
-function upsertSingleTag(html, selectorRe, makeTag) {
-  const re = new RegExp(selectorRe, "i");
-  if (re.test(html)) {
-    return html.replace(re, makeTag());
-  }
-  // insert before </head>
-  const headClose = html.search(/<\/head>/i);
-  if (headClose === -1) return html; // no head? skip
-  return html.slice(0, headClose) + makeTag() + "\n" + html.slice(headClose);
+function getTitle(html) {
+  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  return m ? decode(m[1].trim()) : null;
 }
 
-function removeBlock(html) {
+function getMeta(html, name) {
+  const re = new RegExp(
+    `<meta[^>]*name=["']${name}["'][^>]*content=["']([^"']*)["'][^>]*>`,
+    "i"
+  );
+  const m = html.match(re);
+  return m ? decode(m[1].trim()) : null;
+}
+
+function setOrReplaceMetaByName(html, name, content) {
+  const re = new RegExp(
+    `<meta[^>]*name=["']${name}["'][^>]*>`,
+    "ig"
+  );
+  const tag = `<meta name="${name}" content="${esc(content)}">`;
+  if (re.test(html)) {
+    // Remove all existing then add one clean version
+    html = html.replace(re, "");
+    return insertBeforeHeadClose(html, tag);
+  }
+  return insertBeforeHeadClose(html, tag);
+}
+
+function getOg(html, prop) {
+  const re = new RegExp(
+    `<meta[^>]*property=["']${prop}["'][^>]*content=["']([^"']*)["'][^>]*>`,
+    "i"
+  );
+  const m = html.match(re);
+  return m ? decode(m[1].trim()) : null;
+}
+
+function removeAllOg(html, keys) {
+  for (const k of keys) {
+    const re = new RegExp(
+      `<meta[^>]*property=["']${k}["'][^>]*>`,
+      "ig"
+    );
+    html = html.replace(re, "");
+  }
+  return html;
+}
+
+function setOg(html, prop, content) {
+  const tag = `<meta property="${prop}" content="${esc(content)}">`;
+  return insertBeforeHeadClose(html, tag);
+}
+
+function getTwitter(html, name) {
+  const re = new RegExp(
+    `<meta[^>]*name=["']${name}["'][^>]*content=["']([^"']*)["'][^>]*>`,
+    "i"
+  );
+  const m = html.match(re);
+  return m ? decode(m[1].trim()) : null;
+}
+function removeAllTwitter(html, keys) {
+  for (const k of keys) {
+    const re = new RegExp(
+      `<meta[^>]*name=["']${k}["'][^>]*>`,
+      "ig"
+    );
+    html = html.replace(re, "");
+  }
+  return html;
+}
+function setTwitter(html, name, content) {
+  const tag = `<meta name="${name}" content="${esc(content)}">`;
+  return insertBeforeHeadClose(html, tag);
+}
+
+function hasNoindex(html) {
+  const m = html.match(
+    /<meta[^>]*name=["']robots["'][^>]*content=["']([^"']*)["'][^>]*>/i
+  );
+  if (!m) return false;
+  return /\bnoindex\b/i.test(m[1]);
+}
+function upsertRobots(html) {
+  if (hasNoindex(html)) return html; // respect noindex
+  const re = /<meta[^>]*name=["']robots["'][^>]*>/i;
+  const tag = `<meta name="robots" content="index,follow">`;
+  if (re.test(html)) return html.replace(re, tag);
+  return insertBeforeHeadClose(html, tag);
+}
+
+function upsertCanonical(html, href) {
+  const re = /<link[^>]*rel=["']canonical["'][^>]*>/ig;
+  const tag = `<link rel="canonical" href="${href}">`;
+  if (re.test(html)) {
+    html = html.replace(re, "");
+  }
+  return insertBeforeHeadClose(html, tag);
+}
+
+function removeOurBlock(html) {
   return html.replace(
-    /<!--\s*AUTO-SEO-INJECT v1\s*-->[\s\S]*?<!--\s*\/AUTO-SEO-INJECT\s*-->/i,
+    /<!--\s*AUTO-SEO-INJECT v1\s*-->[\s\S]*?<!--\s*\/AUTO-SEO-INJECT\s*-->/ig,
     ""
   );
 }
 
-function injectBlock(html, block) {
-  const headClose = html.search(/<\/head>/i);
-  if (headClose === -1) return html;
-  return html.slice(0, headClose) + block + "\n" + html.slice(headClose);
+function insertBeforeHeadClose(html, tag) {
+  const idx = html.search(/<\/head>/i);
+  if (idx === -1) return html; // no head
+  return html.slice(0, idx) + tag + "\n" + html.slice(idx);
+}
+
+function insertBlock(html, block) {
+  const idx = html.search(/<\/head>/i);
+  if (idx === -1) return html;
+  return html.slice(0, idx) + block + "\n" + html.slice(idx);
 }
 
 function buildBlock({ pageUrl, title, desc }) {
@@ -133,8 +222,6 @@ function buildBlock({ pageUrl, title, desc }) {
   };
 
   return `<!-- AUTO-SEO-INJECT v1 -->
-<link rel="canonical" href="${fullUrl}">
-<meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="${esc(ENV.SITE_NAME)}">
 <meta property="og:url" content="${fullUrl}">
@@ -149,47 +236,65 @@ function buildBlock({ pageUrl, title, desc }) {
 <!-- /AUTO-SEO-INJECT -->`;
 }
 
+// -------- run --------
 const files = walk(repoRoot);
 let changed = 0;
 
 for (const rel of files) {
   const abs = path.join(repoRoot, rel);
   let html = fs.readFileSync(abs, "utf8");
-
-  // Skip if no </head>
   if (!/<\/head>/i.test(html)) continue;
 
   const pageUrl = urlFor(rel);
   const title =
     getTitle(html) ||
-    (pageUrl === "/" ? "Tech Ability — clear, friendly tech support" : `${ENV.SITE_NAME}`);
-  const desc = getDescription(html) || ENV.SITE_DESC;
+    (pageUrl === "/"
+      ? "Tech Ability — clear, friendly tech support"
+      : ENV.SITE_NAME);
 
-  // Keep any existing <meta name="description"> (do not overwrite),
-  // but if it's missing, add one.
-  if (!getDescription(html)) {
-    html = upsertSingleTag(
-      html,
-      `<meta[^>]*name=["']description["'][^>]*>`,
-      () => `<meta name="description" content="${esc(desc)}">`
-    );
-  }
+  // Choose description: prefer page's current description (update its value),
+  // else fall back to ENV default.
+  const desc = getMeta(html, "description") || ENV.SITE_DESC;
 
-  // Canonical: upsert
+  // 1) Ensure/UPDATE meta description to chosen `desc`
+  html = setOrReplaceMetaByName(html, "description", desc);
+
+  // 2) Robots (respect noindex)
+  html = upsertRobots(html);
+
+  // 3) Canonical
   const fullUrl = `${ENV.SITE_URL.replace(/\/+$/, "")}${pageUrl}`;
-  html = upsertSingleTag(
-    html,
-    `<link[^>]*rel=["']canonical["'][^>]*>`,
-    () => `<link rel="canonical" href="${fullUrl}">`
-  );
+  html = upsertCanonical(html, fullUrl);
 
-  // Replace our previous block (if any), then inject fresh one
-  html = removeBlock(html);
-  html = injectBlock(html, buildBlock({ pageUrl, title, desc }));
+  // 4) Remove previous injected block (if any)
+  html = removeOurBlock(html);
 
-  fs.writeFileSync(abs, html, "utf8");
+  // 5) Remove any existing OG/Twitter *we manage* to avoid duplicates
+  const ogKeys = [
+    "og:url",
+    "og:title",
+    "og:description",
+    "og:image",
+    "og:site_name",
+    "og:type",
+  ];
+  html = removeAllOg(html, ogKeys);
+
+  const twKeys = [
+    "twitter:card",
+    "twitter:title",
+    "twitter:description",
+    "twitter:image",
+  ];
+  html = removeAllTwitter(html, twKeys);
+
+  // 6) Insert a fresh, normalized block
+  html = insertBlock(html, buildBlock({ pageUrl, title, desc }));
+
+  // 7) Write if changed
+  fs.writeFileSync(abs, html.endsWith("\n") ? html : html + "\n", "utf8");
   changed++;
-  console.log(`SEO injected: ${rel} -> ${pageUrl}`);
+  console.log(`SEO updated: ${rel} -> ${pageUrl}`);
 }
 
-console.log(`Done. Files updated: ${changed}`);
+console.log(`Done. Files touched: ${changed}`);
