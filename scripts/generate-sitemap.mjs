@@ -1,96 +1,130 @@
-#!/usr/bin/env node
+// scripts/generate-sitemap.mjs
+// Generate sitemap.xml for GitHub Pages, excluding beta/backup/backups (any case)
+// and purging any such entries if they existed in the previous sitemap.
 
-import fs from "fs";
-import path from "path";
-import { execSync } from "child_process";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
-const cwd = process.cwd();
-const BASE_URL = process.env.BASE_URL || "https://www.techability.co.nz";
-const OUTPUT_FILE = process.env.OUTPUT_FILE || "sitemap.xml";
-const EXCLUDE_DIRS = new Set(
-  (process.env.EXCLUDE_DIRS || "beta,backup,node_modules,.git,.github,Backups")
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean)
-);
+const REPO_ROOT  = process.env.GITHUB_WORKSPACE || process.cwd();
+const BASE_URL   = (process.env.BASE_URL || "https://www.techability.co.nz").replace(/\/+$/, "");
+const OUTPUT_FILE= path.resolve(REPO_ROOT, process.env.OUTPUT_FILE || "sitemap.xml");
 
-function isExcludedDir(seg) {
-  return EXCLUDE_DIRS.has(seg);
+// Case-insensitive dir names to exclude (as path segments)
+const EXCLUDE_SEGMENTS = [/^beta$/i, /^backup$/i, /^backups$/i, /^node_modules$/i, /^\./];
+
+// Include only HTML pages
+const INCLUDE_EXT = new Set([".html", ".htm"]);
+
+// Test a URL path (like "/Backups/foo/index.html") for exclusion
+const isExcludedUrlPath = (urlPath) => /(\/|^)(beta|backup|backups)(\/|$)/i.test(urlPath);
+
+// For filesystem dirs: exclude if any segment matches EXCLUDE_SEGMENTS
+function isExcludedDir(absPath) {
+  const parts = absPath
+    .slice(REPO_ROOT.length)
+    .split(path.sep)
+    .filter(Boolean);
+  return parts.some(seg => EXCLUDE_SEGMENTS.some(rx => rx.test(seg)));
 }
 
-async function walk(dir, out) {
-  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+async function* walk(dir) {
+  if (isExcludedDir(dir)) return;
+
+  const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const ent of entries) {
-    // Skip hidden folders and known excludes
+    const abs = path.join(dir, ent.name);
+
     if (ent.isDirectory()) {
-      if (isExcludedDir(ent.name) || ent.name.startsWith(".")) continue;
-      await walk(path.join(dir, ent.name), out);
-    } else if (ent.isFile()) {
-      if (!ent.name.endsWith(".html")) continue;
-      // Skip partials that start with underscore
-      if (ent.name.startsWith("_")) continue;
-      out.push(path.join(dir, ent.name));
+      if (isExcludedDir(abs)) continue;
+      yield* walk(abs);
+      continue;
+    }
+    if (!ent.isFile()) continue;
+
+    const ext = path.extname(ent.name).toLowerCase();
+    if (INCLUDE_EXT.has(ext)) {
+      if (isExcludedDir(abs)) continue;
+      yield abs;
     }
   }
 }
 
-function toUrl(filePath) {
-  let rel = path.relative(cwd, filePath).replace(/\\/g, "/");
-  // index.html becomes folder path
-  if (rel === "index.html") return BASE_URL + "/";
-  if (rel.endsWith("/index.html")) {
-    const folder = rel.slice(0, -"/index.html".length);
-    return `${BASE_URL}/${folder}/`.replace(/\/+/, "/");
+function toUrlPath(absFile) {
+  const rel = path.relative(REPO_ROOT, absFile).split(path.sep).join("/");
+  // Map index.html to folder slash
+  if (/\/?index\.html?$/i.test(rel)) {
+    const dir = rel.replace(/\/?index\.html?$/i, "");
+    return `/${dir}`.replace(/\/+$/, "/");
   }
-  return `${BASE_URL}/${rel}`.replace(/\/+/, "/");
+  return `/${rel}`;
 }
 
-function lastModISO(filePath) {
+function buildXml(urls) {
+  const now = new Date().toISOString();
+  const lines = [...urls]
+    .sort()
+    .map((loc) => `  <url>
+    <loc>${BASE_URL}${loc}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>${loc === "/" ? "1.0" : "0.7"}</priority>
+    <lastmod>${now}</lastmod>
+  </url>`)
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Auto-generated. Do not edit manually. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${lines}
+</urlset>
+`;
+}
+
+async function readExistingLocs(file) {
   try {
-    const out = execSync(`git log -1 --format=%cI -- "${filePath}"`, { stdio: ["ignore", "pipe", "ignore"] })
-      .toString()
-      .trim();
-    if (out) return out;
+    const xml = await fs.readFile(file, "utf8");
+    const locs = [];
+    const re = /<loc>\s*([^<]+?)\s*<\/loc>/gi;
+    let m;
+    while ((m = re.exec(xml))) {
+      try {
+        const u = new URL(m[1]);
+        locs.push(u.pathname || "/");
+      } catch {
+        // If it's not an absolute URL, try to treat it as a path
+        locs.push(m[1].replace(/^https?:\/\/[^/]+/i, ""));
+      }
+    }
+    return locs;
+  } catch {
+    return [];
+  }
+}
+
+(async () => {
+  // Crawl repo -> build new URL set
+  const urls = new Set();
+  for await (const file of walk(REPO_ROOT)) {
+    const urlPath = toUrlPath(file);
+    if (isExcludedUrlPath(urlPath)) continue; // extra safety
+    urls.add(urlPath);
+  }
+
+  // Ensure root "/" when index.html exists at repo root
+  try {
+    await fs.access(path.resolve(REPO_ROOT, "index.html"));
+    urls.add("/");
   } catch {}
-  const stat = fs.statSync(filePath);
-  return new Date(stat.mtime).toISOString();
-}
 
-function priorityFor(url) {
-  // Give home page a bit more weight
-  if (url === BASE_URL + "/") return "1.0";
-  // index pages get 0.8
-  if (url.endsWith("/")) return "0.8";
-  return "0.7";
-}
+  // Read old sitemap (if any) and report what would be purged
+  const oldLocs = await readExistingLocs(OUTPUT_FILE);
+  const purged = oldLocs.filter(isExcludedUrlPath);
+  if (purged.length) {
+    console.log("⚠️  Removing excluded URLs that were present previously:");
+    for (const p of purged) console.log("   - " + p);
+  }
 
-const files = [];
-await walk(cwd, files);
-files.sort();
-
-const urls = files.map(fp => {
-  const loc = toUrl(fp);
-  const lm = lastModISO(fp);
-  const pr = priorityFor(loc);
-  return { loc, lm, pr };
-});
-
-const header = `<?xml version="1.0" encoding="UTF-8"?>\n` +
-  `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
-
-const body = urls.map(u => {
-  return (
-`  <url>
-    <loc>${u.loc}</loc>
-    <lastmod>${u.lm}</lastmod>
-    <priority>${u.pr}</priority>
-  </url>`
-  );
-}).join("\n");
-
-const footer = `</urlset>\n`;
-
-const xml = [header, body, footer].join("\n");
-await fs.promises.writeFile(path.join(cwd, OUTPUT_FILE), xml, "utf8");
-
-console.log(`Wrote ${OUTPUT_FILE} with ${urls.length} URLs.`);
+  // Write fresh sitemap (excluded entries will no longer appear)
+  const xml = buildXml(urls);
+  await fs.writeFile(OUTPUT_FILE, xml, "utf8");
+  console.log(`✅ Wrote sitemap: ${OUTPUT_FILE} (${urls.size} URLs)`);
+})();
