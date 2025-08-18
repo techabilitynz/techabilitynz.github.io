@@ -1,0 +1,44 @@
+name: Generate sitemap
+
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-sitemap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate sitemap.xml
+        env:
+          BASE_URL: ${{ secrets.SITEMAP_BASE_URL || 'https://www.techability.co.nz' }}
+          EXCLUDE_DIRS: beta,backup,node_modules,.git,.github
+          OUTPUT_FILE: sitemap.xml
+        run: node scripts/generate-sitemap.mjs
+
+      - name: Commit sitemap.xml if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain sitemap.xml)" ]]; then
+            git add sitemap.xml
+            git commit -m "chore: update sitemap.xml [skip ci]"
+            git push
+          else
+            echo "No changes to sitemap.xml"
+          fi
