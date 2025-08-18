@@ -8,7 +8,7 @@ const cwd = process.cwd();
 const BASE_URL = process.env.BASE_URL || "https://www.techability.co.nz";
 const OUTPUT_FILE = process.env.OUTPUT_FILE || "sitemap.xml";
 const EXCLUDE_DIRS = new Set(
-  (process.env.EXCLUDE_DIRS || "beta,backup,node_modules,.git,.github,backups")
+  (process.env.EXCLUDE_DIRS || "beta,backup,node_modules,.git,.github,Backups")
     .split(",")
     .map(s => s.trim())
     .filter(Boolean)
