@@ -1,0 +1,48 @@
+name: Archive site to Wayback & archive.today
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "**/*.html"
+      - "sitemap.xml"
+      - "assets/**"
+      - "!beta/**"
+      - "!backup/**"
+      - "!Backups/**"
+  schedule:
+    - cron: "0 9 */3 * *"
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: "Comma-separated extra URLs to archive (optional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Archive pages
+        env:
+          SITE_ROOT: https://www.techability.co.nz
+          SITEMAP_PATH: sitemap.xml
+          INCLUDE_URLS: ${{ github.event.inputs.urls }}
+          EXCLUDE_PATTERNS: '^/beta/,^/backup/,^/Backups?/,^/Backups/,^/Backups$'
+          WAYBACK_ENABLED: "true"
+          ARCHIVE_TODAY_ENABLED: "true"
+        run: |
+          node scripts/archive-pages.mjs
