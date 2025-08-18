@@ -1,40 +1,62 @@
-name: Build Sitemap
+name: Generate sitemap
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   schedule:
-    - cron: "17 2 * * *"  # nightly 02:17 UTC
+    - cron: "17 2 * * *"   # nightly
   workflow_dispatch:
 
+permissions:
+  contents: write  # <-- needed to push with GITHUB_TOKEN
+
 jobs:
-  generate-sitemap:
+  build-sitemap:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout (full history)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0         # allow rebase/merge
+          ref: ${{ github.ref }} # ensure we’re on the triggering ref
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+        # if no package.json, replace with: npm i globby fast-xml-parser
 
       - name: Generate sitemap.xml
-        env:
-          SITE_URL: https://www.techability.co.nz
-        run: |
-          node scripts/generate-sitemap.mjs
+        run: node scripts/generate-sitemap.mjs
 
-      - name: Commit & Push sitemap
+      - name: Commit & push (rebase if branch moved, retry)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add sitemap.xml
-            git commit -m "ci(sitemap): update sitemap.xml"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          set -e
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Stage changes; exit gracefully if nothing changed
+          git add sitemap.xml
+          git diff --cached --quiet && { echo "No changes."; exit 0; }
+          git commit -m "ci(sitemap): update sitemap.xml"
+
+          # Make sure origin uses the token, then rebase & push with retries
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          for i in 1 2 3; do
+            git fetch origin "${BRANCH}"
+            # Rebase our commit on top of the latest main to avoid non-fast-forward
+            git rebase "origin/${BRANCH}" || { echo "Rebase failed, aborting and retrying merge flow"; git rebase --abort; git pull --no-rebase --ff-only || true; }
+            if git push origin "HEAD:${BRANCH}"; then
+              echo "Push succeeded on attempt ${i}."
+              break
+            fi
+            echo "Push failed (attempt ${i}); branch may have moved. Retrying…"
+            sleep $((i*5))
+          done
