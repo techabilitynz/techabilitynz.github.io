@@ -1,0 +1,10 @@
+{
+  "name": "techability-seo-automation",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "seo": "node scripts/inject-seo.mjs",
+    "sitemap": "node scripts/generate-sitemap.mjs"
+  }
+}

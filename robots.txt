@@ -1,6 +1,8 @@
 User-agent: *
-Allow: /
 Disallow: /beta/
+Disallow: /Beta/
 Disallow: /backup/
+Disallow: /Backup/
+Disallow: /Backups/
 
 Sitemap: https://www.techability.co.nz/sitemap.xml
