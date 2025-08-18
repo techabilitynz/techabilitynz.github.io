@@ -1,57 +1,162 @@
 #!/usr/bin/env node
 /**
- * Generate sitemap.xml for GitHub Pages site
- * - Excludes /beta, /Beta, /backup, /Backup, /Backups
- * - Maps index.html to root path
- * - Removes excluded URLs if they were present previously
+ * Generate sitemap.xml for a static site (GitHub Pages friendly).
+ * - No external deps
+ * - Excludes /beta, /backup, /Backups (case-insensitive) anywhere in the path
+ * - Skips 404.html, sitemap.xml, robots.txt, dotfiles, and non-HTML files
+ * - Uses CNAME (if present) to set the base URL; env SITE_BASE_URL otherwise
+ * - lastmod from `git log -1` if available; falls back to fs mtime
  */
-import fs from "node:fs";
-import path from "node:path";
-import crypto from "node:crypto";
 
-const ROOT = process.cwd();
-const SITE_URL = (process.env.SITE_URL || "https://www.techability.co.nz").replace(/\/+$/,"");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 
-function walk(dir) {
-  const out = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, entry.name);
-    const rel = p.replace(ROOT, "").replace(/\\/g, "/");
-    const isExcluded = [/\/beta\//i, /\/backup\//i, /\/backups\//i].some(rx => rx.test(rel + (entry.isDirectory()?"/":"")));
-    if (entry.isDirectory()) {
-      if (!isExcluded) out.push(...walk(p));
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".html")) {
-      if (!isExcluded) out.push(p);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, "..");
+
+const DEFAULT_BASE = process.env.SITE_BASE_URL || "https://www.techability.co.nz";
+const baseUrl = (() => {
+  try {
+    const cnamePath = path.join(repoRoot, "CNAME");
+    if (fs.existsSync(cnamePath)) {
+      const host = fs.readFileSync(cnamePath, "utf8").trim();
+      if (host) return `https://${host}`;
+    }
+  } catch {}
+  return DEFAULT_BASE;
+})();
+
+const EXCLUDED_DIRS = new Set([
+  ".git", ".github", "node_modules", ".vscode", ".idea",
+  "beta", "backup", "Backups", "Backups_old", "assets_tmp", "tmp", "drafts"
+]);
+
+const EXCLUDED_FILES = new Set([
+  "sitemap.xml", "robots.txt", "CNAME", "README.md", "readme.md", "LICENSE", "license"
+]);
+
+const EXCLUDE_REGEX = /(^|\/)(beta|backup|backups)(\/|$)/i;
+
+function isHidden(name) {
+  return name.startsWith(".") && name !== ".well-known"; // allow .well-known if you use it
+}
+
+function walk(dir, results = []) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const e of entries) {
+    const rel = path.relative(repoRoot, path.join(dir, e.name)).replaceAll("\\", "/");
+    if (!rel) continue;
+
+    // Skip hidden dirs/files (except .well-known)
+    if (isHidden(e.name) && e.name !== ".well-known") continue;
+
+    // Skip excluded dirs & any path containing /beta|/backup|/Backups
+    if (e.isDirectory()) {
+      const parts = rel.split("/");
+      if (parts.some(p => EXCLUDED_DIRS.has(p))) continue;
+      if (EXCLUDE_REGEX.test(`/${rel}/`)) continue;
+      walk(path.join(dir, e.name), results);
+    } else if (e.isFile()) {
+      const base = path.basename(rel);
+      if (EXCLUDED_FILES.has(base)) continue;
+      if (EXCLUDE_REGEX.test(`/${rel}`)) continue;
+
+      // Only HTML
+      if (!/\.html?$/i.test(base)) continue;
+
+      // Common pages we don't want in sitemap
+      if (base.toLowerCase() === "404.html") continue;
+
+      results.push(rel);
     }
   }
-  return out;
+  return results;
 }
 
-function toUrl(filePath) {
-  let rel = path.relative(ROOT, filePath).replace(/\\/g, "/");
-  // Clean up leading "./"
-  rel = rel.replace(/^\.\//, "");
-  // index mapping
-  if (rel.toLowerCase().endsWith("/index.html")) {
-    rel = rel.slice(0, -"/index.html".length) + "/";
+function toUrl(relPath) {
+  // index.html -> folder URL with trailing slash; others -> file path
+  const webPath = relPath.replace(/\\/g, "/");
+  if (/\/index\.html$/i.test(webPath)) {
+    return `/${webPath.replace(/\/index\.html$/i, "/")}`;
   }
-  return `${SITE_URL}/${rel}`.replace(/\/+/g,"/").replace(":/","://");
+  if (/^index\.html$/i.test(webPath)) {
+    return `/`;
+  }
+  return `/${webPath}`;
 }
 
-function lastmod(filePath) {
-  const stats = fs.statSync(filePath);
-  return new Date(stats.mtimeMs).toISOString();
+function urlPriority(u) {
+  // Higher priority for homepage, then shallower paths
+  if (u === "/") return "1.00";
+  const depth = (u.match(/\//g) || []).length - 1; // number of segments
+  if (depth <= 1) return "0.80";
+  if (depth === 2) return "0.70";
+  return "0.60";
 }
 
-const files = walk(ROOT);
-const urls = files.map(p => ({ loc: toUrl(p), lastmod: lastmod(p) }));
+function lastModISO(relPath) {
+  try {
+    const out = execSync(`git log -1 --pretty=%cI -- "${relPath}"`, {
+      cwd: repoRoot,
+      stdio: ["ignore", "pipe", "ignore"]
+    }).toString().trim();
+    if (out) return new Date(out).toISOString();
+  } catch {}
+  try {
+    const st = fs.statSync(path.join(repoRoot, relPath));
+    return new Date(st.mtimeMs).toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
 
-// Build XML
-const xml = `<?xml version="1.0" encoding="UTF-8"?>
+function buildXml(urls) {
+  const urlset = urls.map(u => {
+    const loc = `${baseUrl.replace(/\/+$/, "")}${u}`;
+    const lastmod = lastModISO(u === "/" ? "index.html" : u.slice(1));
+    const priority = urlPriority(u);
+    return `  <url>
+    <loc>${escapeXml(loc)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>${priority}</priority>
+  </url>`;
+  }).join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated by scripts/generate-sitemap.mjs -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(u => `  <url><loc>${u.loc}</loc><lastmod>${u.lastmod}</lastmod><changefreq>weekly</changefreq><priority>${u.loc.endsWith("/")? "1.0":"0.7"}</priority></url>`).join("\n")}
+${urlset}
 </urlset>
 `;
+}
 
-fs.writeFileSync(path.join(ROOT, "sitemap.xml"), xml, "utf8");
-console.log(`Wrote sitemap.xml with ${urls.length} URLs (excluded beta/backup)`);
+function escapeXml(s) {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+// Run
+const htmlFiles = walk(repoRoot);
+
+// Map to public URLs, sort for stable output, and de-duplicate
+const urls = Array.from(new Set(htmlFiles.map(toUrl))).sort((a, b) => {
+  if (a === "/") return -1;
+  if (b === "/") return 1;
+  return a.localeCompare(b);
+});
+
+const xml = buildXml(urls);
+fs.writeFileSync(path.join(repoRoot, "sitemap.xml"), xml, "utf8");
+
+// Log summary for CI
+console.log(`Base URL: ${baseUrl}`);
+console.log(`URLs in sitemap: ${urls.length}`);
+for (const u of urls) console.log(` - ${u}`);

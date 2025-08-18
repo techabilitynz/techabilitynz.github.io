@@ -7,13 +7,22 @@ on:
       - "**/*.html"
       - "scripts/inject-seo.mjs"
       - ".github/workflows/auto-seo-inject.yml"
+  schedule:
+    - cron: "41 2 * * *"   # nightly refresh
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: content-update-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   inject-seo:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -23,24 +32,36 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Inject SEO into HTML
+      - name: Inject SEO into HTML (no deps)
         env:
           SITE_URL: https://www.techability.co.nz
           SITE_NAME: Tech Ability
           DEFAULT_IMAGE: https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg
           SITE_DESC: Tech ability Internet for New Zealand with Christchurch based support, plus tech support for phones, laptops, tablets, and smart homes, with friendly, accessible service.
           FACEBOOK_URL: https://www.facebook.com/TechAbilityCHCH
-        run: |
-          node scripts/inject-seo.mjs
+        run: node scripts/inject-seo.mjs
 
-      - name: Commit & Push changes
+      - name: Commit & Push (rebase-safe)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "ci(seo): inject/update SEO tags"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          set -e
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git diff --cached --quiet && { echo "No SEO changes."; exit 0; }
+          git commit -m "ci(seo): inject/update SEO tags"
+
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          for i in 1 2 3; do
+            git fetch origin "${BRANCH}"
+            git rebase "origin/${BRANCH}" || { git rebase --abort || true; git pull --ff-only || true; }
+            if git push origin "HEAD:${BRANCH}"; then
+              echo "Push succeeded."
+              break
+            fi
+            echo "Push failed (attempt ${i}); retrying…"
+            sleep $((i*5))
+          done
