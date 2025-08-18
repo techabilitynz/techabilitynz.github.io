@@ -1,48 +1,55 @@
-name: Archive site to Wayback & archive.today
+# .github/workflows/archive.yml
+name: Archive site
 
 on:
   push:
-    branches: [ "main" ]
-    paths:
-      - "**/*.html"
-      - "sitemap.xml"
-      - "assets/**"
-      - "!beta/**"
-      - "!backup/**"
-      - "!Backups/**"
+    branches: [ main ]
   schedule:
-    - cron: "0 9 */3 * *"
+    - cron: "0 15 */3 * *"   # every 3 days at 15:00 UTC
   workflow_dispatch:
-    inputs:
-      urls:
-        description: "Comma-separated extra URLs to archive (optional)"
-        required: false
-        default: ""
 
-permissions:
-  contents: read
+concurrency:
+  group: archive-site
+  cancel-in-progress: false
 
 jobs:
-  archive:
+  wayback:
+    name: Wayback snapshot
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    env:
+      SITE_ROOT: https://www.techability.co.nz
+      SITEMAP_PATH: sitemap.xml
+      INCLUDE_URLS: ""
+      EXCLUDE_PATTERNS: '^/beta/,^/backup/,^/Backups?/,^/Backups/,^/Backups$'
+      WAYBACK_ENABLED: "true"
+      ARCHIVE_TODAY_ENABLED: "false"
+      USER_AGENT: "TechAbilityArchiver/1.0 (+https://techability.co.nz)"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: 20
+      - run: node scripts/archive-pages.mjs
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+  archive_today:
+    name: archive.today queue
+    runs-on: ubuntu-latest
+    needs: wayback
+    timeout-minutes: 360
+    env:
+      SITE_ROOT: https://www.techability.co.nz
+      SITEMAP_PATH: sitemap.xml
+      INCLUDE_URLS: ""
+      EXCLUDE_PATTERNS: '^/beta/,^/backup/,^/Backups?/,^/Backups/,^/Backups$'
+      WAYBACK_ENABLED: "false"
+      ARCHIVE_TODAY_ENABLED: "true"
+      ARCHIVE_TODAY_MIN_INTERVAL_MS: "120000"   # 120 seconds between requests
+      ARCHIVE_TODAY_MAX_RETRIES: "4"
+      USER_AGENT: "TechAbilityArchiver/1.0 (+https://techability.co.nz)"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-
-      - name: Archive pages
-        env:
-          SITE_ROOT: https://www.techability.co.nz
-          SITEMAP_PATH: sitemap.xml
-          INCLUDE_URLS: ${{ github.event.inputs.urls }}
-          EXCLUDE_PATTERNS: '^/beta/,^/backup/,^/Backups?/,^/Backups/,^/Backups$'
-          WAYBACK_ENABLED: "true"
-          ARCHIVE_TODAY_ENABLED: "true"
-        run: |
-          node scripts/archive-pages.mjs
+          node-version: 20
+      - run: node scripts/archive-pages.mjs
