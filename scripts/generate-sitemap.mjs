@@ -8,6 +8,7 @@
  * - lastmod from `git log -1` if available; falls back to fs mtime
  */
 
+
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -31,11 +32,11 @@ const baseUrl = (() => {
 
 const EXCLUDED_DIRS = new Set([
   ".git", ".github", "node_modules", ".vscode", ".idea",
-  "beta", "backup", "Backups", "Backups_old", "assets_tmp", "tmp", "drafts"
+  "beta", "backup", "Backups", "Backups_old", "assets_tmp", "tmp", "drafts", "ads-status", "admin"
 ]);
 
 const EXCLUDED_FILES = new Set([
-  "sitemap.xml", "robots.txt", "CNAME", "README.md", "readme.md", "LICENSE", "license"
+  "sitemap.xml", "robots.txt", "CNAME", "README.md", "readme.md", "LICENSE", "license", "ad-status.html"
 ]);
 
 const EXCLUDE_REGEX = /(^|\/)(beta|backup|backups)(\/|$)/i;

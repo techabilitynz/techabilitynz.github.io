@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ad Status (Private) · Tech Ability</title>
+
+  <!-- Keep this page out of search -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+
+  <style>
+    :root{
+      --ink:#222; --ink2:#555; --brand:#0a66ff;
+      --soft:#f6f7fb; --bd:#e6e8ef; --ok:#198754; --warn:#cc7a00; --bad:#b02a37;
+    }
+    html,body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#fff;color:var(--ink)}
+    .wrap{max-width:900px;margin:24px auto;padding:24px}
+    .card{background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.06);padding:20px;margin-bottom:18px}
+    h1{font-size:1.5rem;margin:0 0 12px}
+    h2{font-size:1.1rem;margin:0 0 8px;color:var(--ink2)}
+    .grid{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+    .kv{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border:1px dashed var(--bd);border-radius:10px;background:var(--soft)}
+    .kv b{color:#000}
+    .pill{display:inline-block;padding:.25rem .5rem;border-radius:999px;font-size:.85rem;border:1px solid var(--bd);background:#fff}
+    .pill.ok{border-color:#cfe9d8;color:var(--ok);background:#f3fbf6}
+    .pill.bad{border-color:#f3c6cc;color:var(--bad);background:#fff6f7}
+    .pill.warn{border-color:#f7dfb7;color:var(--warn);background:#fffbf2}
+    .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    button{cursor:pointer;border:1px solid var(--bd);background:#fff;border-radius:10px;padding:10px 14px}
+    button:hover{border-color:#cfd3df}
+    small{color:var(--ink2)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .live{margin-top:10px; padding:10px 12px; border-left:4px solid var(--brand); background:#f0f6ff}
+    .muted{color:#777}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <h1>Monetag Status (Private)</h1>
+    <div class="card">
+      <div class="grid" aria-live="polite" aria-atomic="true" id="summary">
+        <div class="kv"><span>NZ time now</span><b id="now"></b></div>
+        <div class="kv"><span>Device type</span><b id="dev"></b></div>
+        <div class="kv"><span>Quiet hours today (NZ)</span><b id="quiet"></b></div>
+        <div class="kv"><span>Within quiet hour</span><b id="isQuiet" class="pill"></b></div>
+        <div class="kv"><span>10-min cooldown active</span><b id="cooldown" class="pill"></b></div>
+        <div class="kv"><span>Next eligible time</span><b id="next"></b></div>
+        <div class="kv"><span>Effective probability if eligible</span><b id="prob"></b></div>
+        <div class="kv"><span>Eligible to load right now</span><b id="eligible" class="pill"></b></div>
+      </div>
+      <div class="btns">
+        <button id="simulate">Simulate “ad loaded now” (start cooldown)</button>
+        <button id="clear">Clear cooldown</button>
+        <button id="recalc">Recalculate</button>
+      </div>
+      <div class="live" id="liveNote" aria-live="polite"></div>
+      <p class="muted"><small>
+        Notes: Mobile base rate 15%, Desktop 45%. Data-Saver and “reduce motion” each lower the rate by 50%. Two random
+        NZ quiet hours per day block ads entirely. Any served ad starts a 10-minute cooldown and the page removes the
+        ad after ~10 minutes.
+      </small></p>
+    </div>
+
+    <div class="card">
+      <h2>Raw details</h2>
+      <pre id="raw" class="mono" style="white-space:pre-wrap"></pre>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const NZ_TZ = 'Pacific/Auckland';
+      const COOLDOWN_MS = 10 * 60 * 1000;
+      const LAST_KEY = 'monetagLastShown'; // shared with the ad injector
+
+      const fmt = (d, opts={}) => new Intl.DateTimeFormat('en-NZ', {
+        timeZone: NZ_TZ, hour: '2-digit', minute: '2-digit', second: '2-digit',
+        ...opts
+      }).format(d);
+
+      function todaySeedNZ() {
+        const now = new Date();
+        const parts = new Intl.DateTimeFormat('en-NZ', { timeZone: NZ_TZ, year:'numeric', month:'2-digit', day:'2-digit' })
+          .formatToParts(now).reduce((a,p)=> (a[p.type]=p.value, a), {});
+        return `${parts.year}-${parts.month}-${parts.day}`;
+      }
+
+      function hash(str){
+        let h = 2166136261>>>0;
+        for (let i=0;i<str.length;i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return h>>>0;
+      }
+
+      function quietHoursFor(seedStr){
+        const h = hash('techability:'+seedStr);
+        let h1 = h % 24;
+        let h2 = (Math.floor(h/97) % 24);
+        if (h2 === h1) h2 = (h2+7)%24;
+        const pair = [h1,h2].sort((a,b)=>a-b);
+        return pair;
+      }
+
+      function inQuietHourNZ(date){
+        const hours = quietHoursFor(todaySeedNZ());
+        const nzHour = Number(new Intl.DateTimeFormat('en-NZ',{timeZone:NZ_TZ,hour:'numeric',hour12:false}).format(date));
+        return { inQuiet: hours.includes(nzHour), hours };
+      }
+
+      function deviceInfo(){
+        const ua = navigator.userAgent || '';
+        const mobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const saveData = !!(conn && conn.saveData);
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        return { mobile, saveData, reduce };
+      }
+
+      function effectiveProbability(dev){
+        let p = dev.mobile ? 0.15 : 0.45;
+        if (dev.saveData) p *= 0.5;
+        if (dev.reduce)   p *= 0.5;
+        return p;
+      }
+
+      function cooldownInfo(now = Date.now()){
+        const last = Number(localStorage.getItem(LAST_KEY) || 0);
+        if (!last) return { active:false, until:0 };
+        const until = last + COOLDOWN_MS;
+        return { active: now < until, until };
+      }
+
+      function nextEligible(now = Date.now()){
+        const cd = cooldownInfo(now);
+        if (cd.active) return cd.until;
+
+        // If currently in quiet hour, next hour boundary in NZ time
+        const cur = new Date(now);
+        const { inQuiet } = inQuietHourNZ(cur);
+        if (inQuiet) {
+          // move to start of next hour in NZ
+          const parts = new Intl.DateTimeFormat('en-NZ',{ timeZone:NZ_TZ, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false})
+            .formatToParts(cur).reduce((a,p)=> (a[p.type]=p.value, a), {});
+          const nzNow = new Date(new Intl.DateTimeFormat('en-NZ',{timeZone:NZ_TZ}).format(cur));
+          // Fallback: just add 61 minutes
+          return now + 61*60*1000;
+        }
+        return now; // eligible immediately
+      }
+
+      function updateUI(){
+        const now = Date.now();
+        const dev = deviceInfo();
+        const prob = effectiveProbability(dev);
+        const cd = cooldownInfo(now);
+        const q  = inQuietHourNZ(new Date(now));
+        const eligible = !cd.active && !q.inQuiet;
+
+        // fill summary
+        document.getElementById('now').textContent = new Intl.DateTimeFormat('en-NZ',{ timeZone:NZ_TZ, dateStyle:'medium', timeStyle:'medium' }).format(new Date(now));
+        document.getElementById('dev').textContent = dev.mobile ? 'Mobile' : 'Desktop/Laptop';
+        document.getElementById('quiet').textContent = q.hours.map(h=>String(h).padStart(2,'0')+':00').join(' & ');
+        const quietEl = document.getElementById('isQuiet');
+        quietEl.textContent = q.inQuiet ? 'Yes' : 'No';
+        quietEl.className = 'pill ' + (q.inQuiet ? 'bad' : 'ok');
+
+        const cdEl = document.getElementById('cooldown');
+        cdEl.textContent = cd.active ? 'Yes' : 'No';
+        cdEl.className = 'pill ' + (cd.active ? 'warn' : 'ok');
+
+        document.getElementById('prob').textContent = Math.round(prob*100) + '%';
+
+        const eligEl = document.getElementById('eligible');
+        eligEl.textContent = eligible ? 'Yes' : 'No';
+        eligEl.className = 'pill ' + (eligible ? 'ok' : 'bad');
+
+        const nextTs = nextEligible(now);
+        document.getElementById('next').textContent = nextTs ? fmt(new Date(nextTs)) + ' NZ' : '—';
+
+        // raw dump
+        const raw = {
+          nowUTC: new Date(now).toISOString(),
+          nzNow: new Intl.DateTimeFormat('en-NZ',{timeZone:NZ_TZ,dateStyle:'full',timeStyle:'long'}).format(new Date(now)),
+          device: dev,
+          effectiveProbability: prob,
+          cooldown: cd,
+          quietHoursNZ: q.hours,
+          inQuietHour: q.inQuiet,
+          eligibleNow: eligible,
+          lastShownLocalStorage: Number(localStorage.getItem(LAST_KEY) || 0)
+        };
+        document.getElementById('raw').textContent = JSON.stringify(raw,null,2);
+        document.getElementById('liveNote').textContent =
+          eligible ? 'Eligible to show an ad right now (subject to probability).'
+                   : (cd.active ? 'Blocked by 10-minute cooldown.' : 'Blocked by quiet hour.');
+      }
+
+      // Buttons
+      document.getElementById('simulate').addEventListener('click', () => {
+        localStorage.setItem('monetagLastShown', String(Date.now()));
+        updateUI();
+      });
+      document.getElementById('clear').addEventListener('click', () => {
+        localStorage.removeItem('monetagLastShown');
+        updateUI();
+      });
+      document.getElementById('recalc').addEventListener('click', updateUI);
+
+      // init
+      updateUI();
+      // keep “now” fresh
+      setInterval(updateUI, 15_000);
+    })();
+  </script>
+</body>
+</html>
