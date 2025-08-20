@@ -1,4 +1,4 @@
-name: Auto SEO + AdSense + GTM + AdRoll Inject
+name: Auto SEO + AdSense + GTM + Monetag Inject
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
           git pull --rebase origin main
           git stash pop || true
 
-      - name: Inject SEO + AdSense + GTM + AdRoll
+      - name: Inject SEO + AdSense + GTM + Monetag (and remove AdRoll)
         env:
           SITE_URL: https://www.techability.co.nz
           SITE_NAME: Tech Ability
@@ -46,16 +46,14 @@ jobs:
           FACEBOOK_URL: https://www.facebook.com/TechAbilityCHCH
           ADSENSE_CLIENT: ca-pub-9201314612379702
           GTM_ID: GTM-5RQFQZL6
-          ADROLL_ADV_ID: W2Y3FMKCS5CYPIP2WVPJYR
-          ADROLL_PIX_ID: DN6FLAXKHJFMFBKJRDBCH3
         run: |
           node scripts/inject-seo.mjs
 
-      - name: Commit & Push changes (force-with-lease for race-safety)
+      - name: Commit & Push changes (safe against races)
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             git add -A
-            git commit -m "ci(seo): inject/update SEO + AdSense + GTM + AdRoll"
+            git commit -m "ci(seo): inject/update SEO + AdSense + GTM + Monetag (remove AdRoll)"
             git pull --rebase origin main || true
             git push --force-with-lease origin HEAD:main
           else

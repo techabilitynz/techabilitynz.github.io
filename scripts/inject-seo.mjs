@@ -2,9 +2,9 @@
  * Injects (idempotent):
  *  - Google Tag Manager (head + body noscript)
  *  - Google AdSense loader (head)
- *  - AdRoll loader (head)
+ *  - Monetag loader (head, immediately after <head>)
  *  - Canonical, meta description, OG/Twitter, JSON-LD (Organization) block
- * Also removes any older/duplicate GTM, AdSense, AdRoll snippets.
+ * Also removes any older/duplicate GTM, AdSense, Monetag, and AdRoll snippets.
  * Skips /beta, /backup, /backups, .git, node_modules.
  */
 
@@ -19,14 +19,16 @@ const SITE_DESC = process.env.SITE_DESC || "";
 const FACEBOOK_URL = process.env.FACEBOOK_URL || "";
 const ADSENSE_CLIENT = process.env.ADSENSE_CLIENT || "";
 const GTM_ID = process.env.GTM_ID || "";
-const ADROLL_ADV_ID = process.env.ADROLL_ADV_ID || "";
-const ADROLL_PIX_ID = process.env.ADROLL_PIX_ID || "";
 
 const EXCLUDE_DIRS = new Set([".git", "node_modules"]);
 const EXCLUDE_MATCH = [/^beta$/i, /^backup$/i, /^backups$/i];
 
 const AUTO_START = "<!-- AUTO-SEO-INJECT v1 -->";
 const AUTO_END = "<!-- /AUTO-SEO-INJECT -->";
+
+/* ---------- Monetag constants (as provided) ---------- */
+const MONETAG_SNIPPET =
+`<script src="https://fpyf8.com/88/tag.min.js" data-zone="164840" async data-cfasync="false"></script>`;
 
 function walk(dir) {
   const out = [];
@@ -71,21 +73,39 @@ function stripOldAutoBlock(html) {
   return html.replace(rx, "");
 }
 
-/* ---------- GTM ---------- */
+/* ---------- Remove OLD snippets ---------- */
 function stripAnyGTM(html) {
-  const gtmHeadRx = /<script[^>]*>(?:(?!<\/script>).)*googletagmanager\.com\/gtm\.js[^<]*<\/script>\s*/gis;
-  html = html.replace(gtmHeadRx, "");
-  const gtmExternalRx = /<script[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/gtm\.js[^"']*["'][^>]*>\s*<\/script>\s*/gi;
-  html = html.replace(gtmExternalRx, "");
-  const gtmNoScriptRx = /<noscript>\s*<iframe[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/ns\.html\?id=[^"']+["'][^>]*><\/iframe>\s*<\/noscript>\s*/gi;
-  html = html.replace(gtmNoScriptRx, "");
+  const gtmHeadInline = /<script[^>]*>(?:(?!<\/script>).)*googletagmanager\.com\/gtm\.js[^<]*<\/script>\s*/gis;
+  html = html.replace(gtmHeadInline, "");
+  const gtmHeadSrc = /<script[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/gtm\.js[^"']*["'][^>]*>\s*<\/script>\s*/gi;
+  html = html.replace(gtmHeadSrc, "");
+  const gtmNoScript = /<noscript>\s*<iframe[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/ns\.html\?id=[^"']+["'][^>]*><\/iframe>\s*<\/noscript>\s*/gi;
+  html = html.replace(gtmNoScript, "");
+  return html;
+}
+function stripAnyAdSense(html) {
+  const anyAdsLoaderRx = /<script[^>]*\s+src=["']\s*https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>\s*/ig;
+  return html.replace(anyAdsLoaderRx, "");
+}
+function stripAnyAdRoll(html) {
+  const adrollInlineRx = /<script[^>]*>(?:(?!<\/script>).)*(?:adroll_adv_id|s\.adroll\.com\/j\/)[\s\S]*?<\/script>\s*/gi;
+  html = html.replace(adrollInlineRx, "");
+  const adrollSrcRx = /<script[^>]*\s+src=["'][^"']*s\.adroll\.com\/j\/[^"']*["'][^>]*>\s*<\/script>\s*/gi;
+  html = html.replace(adrollSrcRx, "");
+  return html;
+}
+function stripAnyMonetag(html) {
+  const monetagRx = /<script[^>]*\s+src=["']https:\/\/fpyf8\.com\/88\/tag\.min\.js["'][^>]*>\s*<\/script>\s*/gi;
+  const monetagDataRx = /<script[^>]*data-zone=["']164840["'][^>]*>\s*<\/script>\s*/gi;
+  html = html.replace(monetagRx, "");
+  html = html.replace(monetagDataRx, "");
   return html;
 }
 
+/* ---------- Inject NEW snippets ---------- */
 function injectGTM(html, gtmId) {
   if (!gtmId || !hasHeadAndBody(html)) return html;
   html = stripAnyGTM(html);
-
   const gtmHeadSnippet =
 `<!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -106,11 +126,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   return html;
 }
 
-/* ---------- AdSense ---------- */
 function injectAdSense(html) {
   if (!ADSENSE_CLIENT || !/<head[^>]*>/i.test(html)) return html;
-  const anyAdsLoaderRx = /<script[^>]*\s+src=["']\s*https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>\s*/ig;
-  html = html.replace(anyAdsLoaderRx, "");
+  html = stripAnyAdSense(html);
   const snippet =
 `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${escapeAttr(ADSENSE_CLIENT)}"
      crossorigin="anonymous"></script>`;
@@ -120,45 +138,11 @@ function injectAdSense(html) {
   return html;
 }
 
-/* ---------- AdRoll ---------- */
-function stripAnyAdRoll(html) {
-  // Remove inline blocks that declare adroll_adv_id, or load s.adroll.com
-  const adrollInlineRx = /<script[^>]*>(?:(?!<\/script>).)*(?:adroll_adv_id|s\.adroll\.com\/j\/)[\s\S]*?<\/script>\s*/gi;
-  html = html.replace(adrollInlineRx, "");
-  // Remove external script tags to s.adroll.com if any
-  const adrollSrcRx = /<script[^>]*\s+src=["'][^"']*s\.adroll\.com\/j\/[^"']*["'][^>]*>\s*<\/script>\s*/gi;
-  html = html.replace(adrollSrcRx, "");
-  return html;
-}
-
-function injectAdRoll(html) {
-  if (!ADROLL_ADV_ID || !ADROLL_PIX_ID || !/<head[^>]*>/i.test(html)) return html;
-  html = stripAnyAdRoll(html);
-  const snippet =
-`<!-- AdRoll -->
-<script type="text/javascript">
-  adroll_adv_id = "${ADROLL_ADV_ID}";
-  adroll_pix_id = "${ADROLL_PIX_ID}";
-  adroll_version = "2.0";
-  (function(w, d, e, o, a) {
-    w.__adroll_loaded = true;
-    w.adroll = w.adroll || [];
-    w.adroll.f = [ 'setProperties', 'identify', 'track', 'identify_email', 'get_cookie' ];
-    var roundtripUrl = "https://s.adroll.com/j/" + adroll_adv_id + "/roundtrip.js";
-    for (a = 0; a < w.adroll.f.length; a++) {
-      w.adroll[w.adroll.f[a]] = w.adroll[w.adroll.f[a]] || (function(n) {
-        return function() { w.adroll.push([ n, arguments ]) }
-      })(w.adroll.f[a])
-    }
-    e = d.createElement('script'); o = d.getElementsByTagName('script')[0];
-    e.async = 1; e.src = roundtripUrl; o.parentNode.insertBefore(e, o);
-  })(window, document);
-  adroll.track("pageView");
-</script>
-<!-- /AdRoll -->`;
-
-  // Place after AdSense (near top of head)
-  html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${snippet}\n`);
+function injectMonetag(html) {
+  if (!/<head[^>]*>/i.test(html)) return html;
+  html = stripAnyMonetag(html);
+  // Monetag must be immediately after <head> (first thing).
+  html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${MONETAG_SNIPPET}\n`);
   return html;
 }
 
@@ -170,7 +154,7 @@ function pickPageDescription(fileRelPath, html) {
   const rel = fileRelPath.toLowerCase();
   if (rel === "/") {
     return "Clear, friendly tech support in Christchurch and across New Zealand. Help for phones, laptops, tablets and smart homes.";
-  }
+    }
   if (rel.includes("/internet") || rel === "/internet.html") {
     return "Fibre & Hyperfibre internet across NZ with Christchurch-based support. Simple pricing, symmetric speeds up to 4000 Mbps.";
   }
@@ -231,19 +215,22 @@ function processFile(absPath) {
   const original = readFile(absPath);
   if (!/<html[^>]*>/i.test(original)) return null;
 
+  // Start clean
   let html = original;
+  html = stripAnyAdRoll(html);     // REMOVE AdRoll anywhere
+  html = stripAnyMonetag(html);    // prevent duplicates
+  html = stripAnyAdSense(html);    // prevent duplicates
+  html = stripAnyGTM(html);        // prevent duplicates
 
-  // 1) GTM (head + body)
-  html = injectGTM(html, GTM_ID);
-
-  // 2) AdSense (head)
-  html = injectAdSense(html);
-
-  // 3) AdRoll (head)
-  html = injectAdRoll(html);
-
-  // 4) SEO block
+  // Inject in this order so Monetag ends up first after <head>:
+  // 1) SEO block
   html = updateAutoSeo(html, absPath);
+  // 2) AdSense
+  html = injectAdSense(html);
+  // 3) GTM (head + body noscript)
+  html = injectGTM(html, GTM_ID);
+  // 4) Monetag (last -> appears immediately after <head>)
+  html = injectMonetag(html);
 
   if (html !== original) {
     writeFile(absPath, html);
