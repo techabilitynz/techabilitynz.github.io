@@ -1,389 +1,267 @@
 #!/usr/bin/env node
 /**
- * Auto SEO injector (content-aware descriptions).
- * - Generates a good per-page <meta name="description"> from the page content.
- * - Updates/normalizes canonical, OG, Twitter, robots (respects existing noindex).
- * - Idempotent via <!-- AUTO-SEO-INJECT v1 --> markers.
- * - Skips /beta, /backup, /Backups (any case).
- * - Dependency-free (Node 18+).
+ * Auto SEO & AdSense injector (idempotent)
+ * - Upserts <title>, <meta name="description">, canonical
+ * - Adds/updates OG + Twitter tags
+ * - Inserts JSON-LD (Organization, WebSite, WebPage)
+ * - Adds Facebook publisher/see_also if provided
+ * - Adds AdSense auto-ads tag (head) when ADSENSE_ID is set
+ * - Skips /beta, /backup, /Backups, /node_modules, /.github
  */
 
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import cheerio from "cheerio";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT = path.resolve(__dirname, "..");
+const REPO_ROOT = process.cwd();
 
-// -------- ENV defaults --------
-const ENV = {
-  SITE_URL: process.env.SITE_URL || "https://www.techability.co.nz",
-  SITE_NAME: process.env.SITE_NAME || "Tech Ability",
-  DEFAULT_IMAGE:
-    process.env.DEFAULT_IMAGE ||
-    "https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg",
-  SITE_DESC:
-    process.env.SITE_DESC ||
-    "Tech Ability Internet for New Zealand with Christchurch support — plus friendly, accessible tech help for phones, laptops, tablets and smart homes.",
-  FACEBOOK_URL:
-    process.env.FACEBOOK_URL || "https://www.facebook.com/TechAbilityCHCH",
-};
+const SITE_URL = (process.env.SITE_URL || "https://example.com").replace(/\/+$/, "");
+const SITE_NAME = process.env.SITE_NAME || "My Site";
+const DEFAULT_IMAGE = process.env.DEFAULT_IMAGE || `${SITE_URL}/og.png`;
+const DEFAULT_DESC = process.env.SITE_DESC || `${SITE_NAME}`;
+const FACEBOOK_URL = process.env.FACEBOOK_URL || "";
+const ADSENSE_ID = process.env.ADSENSE_ID || "";
 
-// -------- helpers --------
-const EXCLUDE_DIR_RE = /(^|\/)(beta|backup|backups)(\/|$)/i;
-const SKIP_FILES = new Set([
-  "sitemap.xml",
-  "robots.txt",
-  "CNAME",
-  "README.md",
-  "readme.md",
-  "LICENSE",
-  "license",
-]);
+const EXCLUDE_DIRS = new Set(["node_modules", ".git", ".github", "beta", "backup", "Backups"]);
 
-function isHidden(n) {
-  return n.startsWith(".") && n !== ".well-known";
-}
+// --- utilities ---------------------------------------------------------------
 
-function walk(dir, out = []) {
-  for (const d of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (isHidden(d.name)) continue;
-    const abs = path.join(dir, d.name);
-    const rel = path.relative(ROOT, abs).replaceAll("\\", "/");
-    if (d.isDirectory()) {
-      if (EXCLUDE_DIR_RE.test(`/${rel}/`)) continue;
-      walk(abs, out);
-    } else if (d.isFile()) {
-      const base = path.basename(rel);
-      if (SKIP_FILES.has(base)) continue;
-      if (!/\.html?$/i.test(base)) continue;
-      if (EXCLUDE_DIR_RE.test(`/${rel}`)) continue;
-      out.push(rel);
-    }
+function walk(dir) {
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (EXCLUDE_DIRS.has(entry.name)) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walk(full));
+    else if (entry.isFile() && entry.name.toLowerCase().endsWith(".html")) out.push(full);
   }
   return out;
 }
 
-function pageUrl(rel) {
-  const web = rel.replace(/\\/g, "/");
-  if (/^index\.html?$/i.test(web)) return "/";
-  if (/\/index\.html?$/i.test(web)) return `/${web.replace(/\/index\.html?$/i, "/")}`;
-  return `/${web}`;
+function relUrlForFile(absPath) {
+  let rel = path.relative(REPO_ROOT, absPath).replace(/\\/g, "/"); // windows-safe
+  // For "index.html" use folder path as "/" (canonical root) or subfolder path
+  if (rel.endsWith("/index.html")) {
+    rel = rel.slice(0, -"/index.html".length) + "/";
+  } else if (rel === "index.html") {
+    rel = "/";
+  } else {
+    rel = "/" + rel;
+  }
+  // Collapse "/./" and remove double slashes
+  rel = rel.replace(/\/{2,}/g, "/");
+  return new URL(rel, SITE_URL).toString();
 }
 
-function dec(s) {
-  return s
-    .replaceAll("&amp;", "&")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'");
+function clampDesc(s) {
+  const clean = s.replace(/\s+/g, " ").trim();
+  if (clean.length <= 90) return clean;
+  if (clean.length <= 160) return clean;
+  // try to cut at sentence end before 160
+  const slice = clean.slice(0, 160);
+  const lastDot = slice.lastIndexOf(". ");
+  if (lastDot > 90) return slice.slice(0, lastDot + 1).trim();
+  return slice.trim() + "…";
 }
-function esc(s) {
-  return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-function stripTags(s) {
-  return dec(
-    s
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<!--[\s\S]*?-->/g, " ")
-      .replace(/<[^>]+>/g, " ")
-  )
-    .replace(/\s+/g, " ")
-    .trim();
-}
-function pick(...vals) {
-  for (const v of vals) if (v && String(v).trim()) return String(v).trim();
+
+function textFromFirst($, selectors) {
+  for (const sel of selectors) {
+    const t = ($(sel).first().text() || "").replace(/\s+/g, " ").trim();
+    if (t) return t;
+  }
   return "";
 }
-function clampDesc(s, min = 120, max = 165) {
-  let t = (s || "").replace(/\s+/g, " ").trim();
-  if (!t) return t;
-  if (t.length <= max && t.length >= min) return t;
 
-  // try sentence boundary before max
-  if (t.length > max) {
-    const slice = t.slice(0, max + 1);
-    const lastStop = Math.max(
-      slice.lastIndexOf(". "),
-      slice.lastIndexOf("! "),
-      slice.lastIndexOf("? ")
-    );
-    if (lastStop > min * 0.6) {
-      t = slice.slice(0, lastStop + 1).trim();
-    } else {
-      t = t.slice(0, max - 1).trim() + "…";
+// meta/link upsert helpers
+function upsertMetaName($, name, content) {
+  if (!content) return;
+  const el = $(`head meta[name="${name}"]`);
+  if (el.length) el.attr("content", content);
+  else $("head").append(`\n<meta name="${name}" content="${content}">`);
+}
+
+function upsertMetaProp($, property, content) {
+  if (!content) return;
+  const el = $(`head meta[property="${property}"]`);
+  if (el.length) el.attr("content", content);
+  else $("head").append(`\n<meta property="${property}" content="${content}">`);
+}
+
+function upsertLinkRel($, rel, href) {
+  if (!href) return;
+  const el = $(`head link[rel="${rel}"]`);
+  if (el.length) el.attr("href", href);
+  else $("head").append(`\n<link rel="${rel}" href="${href}">`);
+}
+
+function ensureTitle($, fallback) {
+  const t = ($("head > title").text() || "").trim();
+  if (t) return t;
+  $("head").prepend(`\n<title>${fallback}</title>`);
+  return fallback;
+}
+
+function removeOldAutoBlocks(html) {
+  return html.replace(/<!--\s*AUTO-SEO-INJECT v\d+\s*-->[\s\S]*?<!--\s*\/AUTO-SEO-INJECT\s*-->/gi, "");
+}
+
+// JSON-LD builder
+function ensureJsonLd($, { pageName, pageUrl }) {
+  // remove any previous our-block to avoid duplicates
+  $('script[type="application/ld+json"][data-techability="seo"]').remove();
+
+  const ld = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": SITE_NAME,
+      "url": SITE_URL,
+      "logo": DEFAULT_IMAGE,
+      ...(FACEBOOK_URL ? { "sameAs": [FACEBOOK_URL] } : {}),
+      "areaServed": "NZ",
+      "knowsAbout": [
+        "Fibre broadband",
+        "Hyperfibre",
+        "Internet provider New Zealand",
+        "Wi-Fi help",
+        "Smart home setup",
+        "Computer support",
+        "Phone support"
+      ]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": SITE_NAME,
+      "url": SITE_URL,
+      "inLanguage": "en-NZ",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${SITE_URL}/search?q={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": pageName || SITE_NAME,
+      "url": pageUrl
     }
-  }
-  // if still short, leave as is (Google may expand)
-  return t;
-}
+  ];
 
-// -------- extractors --------
-function getBetween(html, re, group = 1) {
-  const m = html.match(re);
-  return m ? dec(m[group].trim()) : "";
-}
-function allBetween(html, re, group = 1, limit = 6) {
-  const out = [];
-  let m;
-  while ((m = re.exec(html)) && out.length < limit) {
-    out.push(dec(m[group].trim()));
-  }
-  return out;
-}
-function getTitle(html) {
-  return getBetween(html, /<title[^>]*>([\s\S]*?)<\/title>/i);
-}
-function getMeta(html, name) {
-  const m = html.match(
-    new RegExp(
-      `<meta[^>]*name=["']${name}["'][^>]*content=["']([^"']+)["'][^>]*>`,
-      "i"
-    )
-  );
-  return m ? dec(m[1]) : "";
-}
-function hasNoindex(html) {
-  const m = html.match(
-    /<meta[^>]*name=["']robots["'][^>]*content=["']([^"']+)["'][^>]*>/i
-  );
-  return m ? /\bnoindex\b/i.test(m[1]) : false;
-}
-
-// Gentle selector-ish regexes (good enough for static pages)
-function texts(html, selector) {
-  switch (selector) {
-    case "h1":
-      return allBetween(html, /<h1[^>]*>([\s\S]*?)<\/h1>/gi).map(stripTags);
-    case ".display-5":
-      return allBetween(
-        html,
-        /<[^>]*class=["'][^"']*\bdisplay-5\b[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/gi
-      ).map(stripTags);
-    case ".lead":
-      return allBetween(
-        html,
-        /<p[^>]*class=["'][^"']*\blead\b[^"']*["'][^>]*>([\s\S]*?)<\/p>/gi
-      ).map(stripTags);
-    case "p":
-      return allBetween(html, /<p[^>]*>([\s\S]*?)<\/p>/gi).map(stripTags);
-    default:
-      return [];
-  }
-}
-
-function detectSpeeds(text) {
-  const speeds = Array.from(
-    new Set(
-      (text.match(/\b\d{2,4}\s*Mbps\b/gi) || []).map((s) =>
-        s.replace(/\s+/g, " ").toUpperCase()
-      )
-    )
-  );
-  const hasHyper = /hyperfibre|hyperfiber/i.test(text);
-  return { speeds, hasHyper };
-}
-
-function detectContactBits(html) {
-  const phone =
-    getBetween(html, /(tel:|tel&#58;|tel&#x3A;)\+?([0-9 \-\(\)]{6,})/i, 2) ||
-    dec(
-      (html.match(/>\s*([+()0-9 \-]{6,})\s*</) || [])[1] || ""
-    );
-  const mail = getBetween(html, /(mailto:)([^"']+)/i, 2);
-  return {
-    phone: (phone || "").replace(/\s+/g, " ").trim(),
-    email: (mail || "").trim(),
-  };
-}
-
-function computeDescription(rel, html) {
-  const url = pageUrl(rel);
-  const title = pick(getTitle(html));
-  const h1 = pick(...texts(html, "h1"));
-  const display5 = pick(...texts(html, ".display-5"));
-  const lead = pick(...texts(html, ".lead"));
-  const firstP = pick(...texts(html, "p"));
-  const bigText = [h1, display5, lead, firstP].filter(Boolean).join(" · ");
-  const { speeds, hasHyper } = detectSpeeds(html + " " + bigText);
-  const lower = (title + " " + h1 + " " + bigText).toLowerCase();
-
-  // Page-specific templates
-  if (/contact/i.test(rel) || /\/contact(\.html?)?$/i.test(url)) {
-    const { phone, email } = detectContactBits(html);
-    let base =
-      "Contact Tech Ability — friendly, accessible support for Christchurch & NZ.";
-    if (phone) base += ` Call or text ${phone}.`;
-    if (email) base += ` Email ${email}.`;
-    return clampDesc(base);
-  }
-
-  if (/internet/i.test(rel) || /\/internet(\.html?)?$/i.test(url)) {
-    const speedBit = speeds.length
-      ? ` Plans up to ${speeds.sort((a, b) => parseInt(b) - parseInt(a))[0]}`
-      : " Fast Fibre & Hyperfibre plans";
-    let base = `Tech Ability Internet for NZ with Christchurch support.${speedBit}. Simple pricing, ${hasHyper ? "symmetric Hyperfibre" : "optional modem hire"}, and in-browser speed test.`;
-    return clampDesc(base);
-  }
-
-  if (/index\.html?$/i.test(rel) || url === "/") {
-    let base =
-      "Tech Ability — clear, friendly tech support in Christchurch & across NZ: device setup, computer maintenance, smart homes, plus Fibre & Hyperfibre internet.";
-    return clampDesc(base);
-  }
-
-  // Generic: build from page content
-  const brandTail =
-    " Tech Ability — Christchurch support & nationwide internet and tech help.";
-  const content = stripTags(bigText || title || firstP || ENV.SITE_DESC);
-  let base = content;
-  // If content too short or generic, use site desc
-  if (!base || base.length < 60) base = ENV.SITE_DESC;
-  // Sprinkle in speeds/offer if relevant
-  if (speeds.length) base += ` Plans up to ${speeds[0]}.`;
-  if (hasHyper && !/hyperfibre/i.test(base)) base += " Hyperfibre available.";
-  // Ensure brand/location presence
-  if (!/tech ability/i.test(base)) base += brandTail;
-
-  return clampDesc(base);
-}
-
-// -------- tag writers --------
-function insertBeforeHeadClose(html, tag) {
-  const idx = html.search(/<\/head>/i);
-  if (idx === -1) return html;
-  return html.slice(0, idx) + tag + "\n" + html.slice(idx);
-}
-function insertBlock(html, block) {
-  const idx = html.search(/<\/head>/i);
-  if (idx === -1) return html;
-  return html.slice(0, idx) + block + "\n" + html.slice(idx);
-}
-function removeOurBlock(html) {
-  return html.replace(
-    /<!--\s*AUTO-SEO-INJECT v1\s*-->[\s\S]*?<!--\s*\/AUTO-SEO-INJECT\s*-->/gi,
-    ""
+  $("head").append(
+    `\n<script type="application/ld+json" data-techability="seo">${JSON.stringify(ld)}</script>`
   );
 }
-function setOrReplaceMetaByName(html, name, content) {
-  const re = new RegExp(`<meta[^>]*name=["']${name}["'][^>]*>`, "ig");
-  const tag = `<meta name="${name}" content="${esc(content)}">`;
-  if (re.test(html)) html = html.replace(re, "");
-  return insertBeforeHeadClose(html, tag);
-}
-function upsertCanonical(html, href) {
-  const re = /<link[^>]*rel=["']canonical["'][^>]*>/gi;
-  const tag = `<link rel="canonical" href="${href}">`;
-  if (re.test(html)) html = html.replace(re, "");
-  return insertBeforeHeadClose(html, tag);
-}
-function robotsRespect(html) {
-  if (hasNoindex(html)) return html; // keep author choice
-  const re = /<meta[^>]*name=["']robots["'][^>]*>/i;
-  const tag = `<meta name="robots" content="index,follow">`;
-  if (re.test(html)) return html.replace(re, tag);
-  return insertBeforeHeadClose(html, tag);
-}
-function removeAllOg(html, keys) {
-  for (const k of keys) {
-    html = html.replace(
-      new RegExp(`<meta[^>]*property=["']${k}["'][^>]*>`, "ig"),
-      ""
+
+// AdSense
+function ensureAdSense($) {
+  if (!ADSENSE_ID) return;
+  const srcMatch = `pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}`;
+
+  const hasScript =
+    $('head script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]').filter((_, el) => {
+      const s = $(el).attr("src") || "";
+      return s.includes(ADSENSE_ID);
+    }).length > 0;
+
+  const hasMeta = $(`head meta[name="google-adsense-account"][content="${ADSENSE_ID}"]`).length > 0;
+
+  if (!hasMeta) {
+    $("head").prepend(`\n<meta name="google-adsense-account" content="${ADSENSE_ID}">`);
+  }
+  if (!hasScript) {
+    $("head").prepend(
+      `\n<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}" crossorigin="anonymous"></script>`
     );
   }
-  return html;
 }
-function removeAllTwitter(html, keys) {
-  for (const k of keys) {
-    html = html.replace(
-      new RegExp(`<meta[^>]*name=["']${k}["'][^>]*>`, "ig"),
-      ""
-    );
+
+// main per-file processor
+function processHtmlFile(abs) {
+  const raw = fs.readFileSync(abs, "utf8");
+  const cleaned = removeOldAutoBlocks(raw);
+  const $ = cheerio.load(cleaned, { decodeEntities: false });
+
+  // ensure <head> exists
+  if ($("head").length === 0) $("html").prepend("<head></head>");
+  if ($("body").length === 0) $("html").append("<body></body>");
+
+  // derive canonical + page name
+  const canonical = relUrlForFile(abs);
+  const h1 = textFromFirst($, ["main h1", "h1", "header h1"]);
+  const pageBase = h1 || textFromFirst($, ["title"]) || SITE_NAME;
+  const pageTitle = pageBase.trim() === SITE_NAME ? SITE_NAME : `${pageBase}`;
+  const title = ensureTitle($, pageTitle);
+
+  // description: keep existing if present; else build from hero/lead/first p
+  let desc = ($('head meta[name="description"]').attr("content") || "").trim();
+  if (!desc) {
+    const firstPara = textFromFirst($, [".lead", "main p", "p", "section p"]);
+    desc = clampDesc(firstPara || DEFAULT_DESC);
+  } else {
+    desc = clampDesc(desc);
   }
-  return html;
-}
-function buildOgTwBlock({ pageUrl, title, description }) {
-  const fullUrl = `${ENV.SITE_URL.replace(/\/+$/, "")}${pageUrl}`;
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: ENV.SITE_NAME,
-    url: ENV.SITE_URL,
-    sameAs: [ENV.FACEBOOK_URL],
-    areaServed: "NZ",
-  };
-  return `<!-- AUTO-SEO-INJECT v1 -->
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="${esc(ENV.SITE_NAME)}">
-<meta property="og:url" content="${esc(fullUrl)}">
-<meta property="og:title" content="${esc(title)}">
-<meta property="og:description" content="${esc(description)}">
-<meta property="og:image" content="${esc(ENV.DEFAULT_IMAGE)}">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${esc(title)}">
-<meta name="twitter:description" content="${esc(description)}">
-<meta name="twitter:image" content="${esc(ENV.DEFAULT_IMAGE)}">
-<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
-<!-- /AUTO-SEO-INJECT -->`;
-}
 
-// -------- main --------
-const files = walk(ROOT);
-let touched = 0;
+  // robots default
+  if (!$('head meta[name="robots"]').length) {
+    upsertMetaName($, "robots", "index,follow");
+  }
 
-for (const rel of files) {
-  const abs = path.join(ROOT, rel);
-  let html = fs.readFileSync(abs, "utf8");
-  if (!/<\/head>/i.test(html)) continue;
+  // canonical
+  upsertLinkRel($, "canonical", canonical);
 
-  const pUrl = pageUrl(rel);
-  const title =
-    getBetween(html, /<title[^>]*>([\s\S]*?)<\/title>/i) ||
-    (pUrl === "/" ? "Tech Ability — clear, friendly tech support" : ENV.SITE_NAME);
+  // description
+  upsertMetaName($, "description", desc);
 
-  // Generate a GOOD page-specific description from content
-  const generatedDesc = computeDescription(rel, html);
+  // Open Graph
+  upsertMetaProp($, "og:type", "website");
+  upsertMetaProp($, "og:site_name", SITE_NAME);
+  upsertMetaProp($, "og:url", canonical);
+  upsertMetaProp($, "og:title", title);
+  upsertMetaProp($, "og:description", desc);
+  upsertMetaProp($, "og:image", DEFAULT_IMAGE);
 
-  // 1) description (always normalize to our generated one)
-  html = setOrReplaceMetaByName(html, "description", generatedDesc);
+  // Twitter
+  upsertMetaName($, "twitter:card", "summary_large_image");
+  upsertMetaName($, "twitter:title", title);
+  upsertMetaName($, "twitter:description", desc);
+  upsertMetaName($, "twitter:image", DEFAULT_IMAGE);
 
-  // 2) robots
-  html = robotsRespect(html);
+  // Facebook extras
+  if (FACEBOOK_URL) {
+    upsertMetaProp($, "article:publisher", FACEBOOK_URL);
+    upsertMetaProp($, "og:see_also", FACEBOOK_URL);
+  }
 
-  // 3) canonical
-  const canonical = `${ENV.SITE_URL.replace(/\/+$/, "")}${pUrl}`;
-  html = upsertCanonical(html, canonical);
+  // JSON-LD
+  ensureJsonLd($, { pageName: title, pageUrl: canonical });
 
-  // 4) replace prior injected block & any OG/Twitter we manage
-  html = removeOurBlock(html);
-  html = removeAllOg(html, [
-    "og:url",
-    "og:title",
-    "og:description",
-    "og:image",
-    "og:site_name",
-    "og:type",
-  ]);
-  html = removeAllTwitter(html, [
-    "twitter:card",
-    "twitter:title",
-    "twitter:description",
-    "twitter:image",
-  ]);
+  // AdSense
+  ensureAdSense($);
 
-  // 5) insert clean OG/Twitter/JSON-LD block
-  html = insertBlock(html, buildOgTwBlock({ pageUrl: pUrl, title, description: generatedDesc }));
+  const out = $.html();
 
-  fs.writeFileSync(abs, html.endsWith("\n") ? html : html + "\n", "utf8");
-  touched++;
-  console.log(`SEO updated: ${rel} → ${pUrl}`);
+  if (out !== raw) {
+    fs.writeFileSync(abs, out);
+    console.log(`Updated SEO: ${path.relative(REPO_ROOT, abs)}`);
+    return true;
+  } else {
+    return false;
+  }
 }
 
-console.log(`Done. Files touched: ${touched}`);
+// run -------------------------------------------------------------------------
+const htmlFiles = walk(REPO_ROOT);
+let changed = 0;
+for (const f of htmlFiles) {
+  try {
+    if (processHtmlFile(f)) changed++;
+  } catch (e) {
+    console.error(`Failed ${f}:`, e.message);
+  }
+}
+
+console.log(`Done. Updated ${changed}/${htmlFiles.length} HTML files.`);
