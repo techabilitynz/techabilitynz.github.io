@@ -1,17 +1,22 @@
-name: Auto SEO + AdSense + GTM + Monetag Inject
+# .github/workflows/auto-seo-inject.yml
+name: Auto SEO Inject
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
     paths:
       - "**/*.html"
       - "scripts/inject-seo.mjs"
       - ".github/workflows/auto-seo-inject.yml"
-  workflow_dispatch: {}
+  workflow_dispatch:
 
+permissions:
+  contents: write
+
+# Prevent two runs from fighting to push at the same time
 concurrency:
-  group: seo-inject-${{ github.ref }}
-  cancel-in-progress: false
+  group: auto-seo-inject-main
+  cancel-in-progress: true
 
 jobs:
   inject-seo:
@@ -20,42 +25,65 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0           # we need full history to rebase
+          persist-credentials: true
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Prepare working tree (stash uncommitted to avoid rebase error)
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git stash push -u -m "pre-seo-inject" || true
-          git fetch origin main
-          git checkout main
-          git pull --rebase origin main
-          git stash pop || true
-
-      - name: Inject SEO + AdSense + GTM + Monetag (and remove AdRoll)
+      - name: Run injector
         env:
           SITE_URL: https://www.techability.co.nz
           SITE_NAME: Tech Ability
           DEFAULT_IMAGE: https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg
-          SITE_DESC: Tech ability Internet for New Zealand with Christchurch based support, plus tech support for phones, laptops, tablets, and smart homes, with friendly, accessible service.
+          SITE_DESC: Tech Ability Internet for New Zealand with Christchurch based support, plus tech support for phones, laptops, tablets, and smart homes, with friendly, accessible service.
           FACEBOOK_URL: https://www.facebook.com/TechAbilityCHCH
-          ADSENSE_CLIENT: ca-pub-9201314612379702
           GTM_ID: GTM-5RQFQZL6
-        run: |
-          node scripts/inject-seo.mjs
+          ADSENSE_CLIENT: ca-pub-9201314612379702
+        run: node scripts/inject-seo.mjs
 
-      - name: Commit & Push changes (safe against races)
+      - name: Commit & push (rebase + autostash, retry)
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+
+          # Git identity + safer pulls
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global pull.rebase true
+          git config --global rebase.autoStash true
+
+          # Use token for pushing (respects branch protections if allowed)
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}"
+
           if [[ -n "$(git status --porcelain)" ]]; then
             git add -A
-            git commit -m "ci(seo): inject/update SEO + AdSense + GTM + Monetag (remove AdRoll)"
-            git pull --rebase origin main || true
-            git push --force-with-lease origin HEAD:main
+            git commit -m "ci(seo): inject/update SEO + GTM + AdSense (+ controller hooks)"
+
+            # Always rebase on latest main before pushing
+            git fetch origin main
+            # --autostash requires Git >=2.14; we also enabled rebase.autoStash for safety
+            git pull --rebase --autostash origin main || true
+
+            # Robust push with backoff retries (handles "cannot lock ref" / non-ff)
+            for n in 1 2 3 4 5; do
+              if git push origin HEAD:main; then
+                echo "Push succeeded on attempt ${n}"
+                break
+              fi
+              echo "Push failed (attempt ${n}). Re-fetch + rebase, then retry after backoff..."
+              sleep $(( n * 2 ))
+              git fetch origin main
+              git pull --rebase --autostash origin main || true
+              if [[ $n -eq 5 ]]; then
+                echo "Giving up after ${n} attempts."
+                exit 1
+              fi
+            done
           else
             echo "No changes to commit."
           fi
