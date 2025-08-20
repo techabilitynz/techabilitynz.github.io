@@ -1,6 +1,130 @@
 <!DOCTYPE html>
 <html lang="en-US" itemscope itemtype="http://schema.org/WebPage">
 <head>
+<!-- AUTO-MONETAG v1 -->
+<script data-auto-monetag="v1">
+(function(){
+  try{
+    // Respect user settings
+    var saveData = (navigator.connection && navigator.connection.saveData) ? 1 : 0;
+    var prefersReducedMotion = false;
+    try {
+      prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch(e){}
+
+    // NZ time helpers
+    function nzHour(){
+      try{
+        var h = new Intl.DateTimeFormat('en-NZ',{ timeZone:'Pacific/Auckland', hour:'2-digit', hour12:false }).format(new Date());
+        return parseInt(h, 10);
+      }catch(e){
+        // Fallback: approximate NZ by local hour (less accurate)
+        return new Date().getHours();
+      }
+    }
+    function nzDayKey(){
+      try{
+        return new Intl.DateTimeFormat('en-NZ',{ timeZone:'Pacific/Auckland', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+      }catch(e){
+        var d=new Date();
+        return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+      }
+    }
+    function hash(s){ for(var i=0,h=0;i<s.length;i++){ h=(h<<5)-h+s.charCodeAt(i); h|=0 } return Math.abs(h); }
+
+    var hour = nzHour();
+    var dayKey = nzDayKey();
+    var h = hash(dayKey);
+    var quiet1 = h % 24;
+    var quiet2 = (Math.floor(h/7) % 24);
+    if (quiet1 === quiet2) quiet2 = (quiet2 + 6) % 24;
+    var inQuiet = (hour === quiet1 || hour === quiet2);
+
+    var isMobile = /Mobi|Android/i.test(navigator.userAgent) || (Math.min(window.innerWidth, window.innerHeight) <= 576);
+
+    // Base probabilities
+    var base = isMobile ? 0.15 : 0.45; // mobile-light
+    if (saveData) base *= 0.4;
+    if (prefersReducedMotion) base *= 0.7;
+    if (inQuiet) base *= 0.2;
+
+    var now = Date.now();
+    var last = parseInt(localStorage.getItem('mt_last')||'0',10);
+    var cooldown = parseInt(localStorage.getItem('mt_cooldown')||'0',10);
+
+    // Honor cool-down window (10 min)
+    if (now < cooldown) return;
+
+    // Randomize to not be too frequent
+    if (Math.random() >= base) {
+      // brief cool-down to avoid retry spam (5 min)
+      localStorage.setItem('mt_cooldown', String(now + 5*60*1000));
+      return;
+    }
+
+    // Accessibility: mark ad nodes aria-hidden when they appear
+    function markA11y(el){
+      try{
+        el.setAttribute('aria-hidden','true');
+        el.setAttribute('tabindex','-1');
+        el.setAttribute('role','presentation');
+      }catch(e){}
+    }
+    var mo = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        m.addedNodes && Array.from(m.addedNodes).forEach(function(n){
+          if (n.nodeType !== 1) return;
+          var el = n;
+          if (el.tagName === 'IFRAME' && (el.src||'').indexOf('fpyf8.com') !== -1) markA11y(el);
+          var idc = (el.id||'').toLowerCase() + ' ' + (el.className||'').toString().toLowerCase();
+          if (idc.indexOf('monetag') !== -1) markA11y(el);
+          el.querySelectorAll('iframe,div').forEach(function(c){
+            var idc2 = (c.id||'').toLowerCase() + ' ' + (c.className||'').toString().toLowerCase();
+            if ((c.src||'').indexOf('fpyf8.com') !== -1 || idc2.indexOf('monetag') !== -1) markA11y(c);
+          });
+        });
+      });
+    });
+    try{ mo.observe(document.documentElement, {childList:true, subtree:true}); }catch(e){}
+
+    // Load Monetag script
+    function loadMonetag(){
+      var s = document.createElement('script');
+      s.src = "https://fpyf8.com/88/tag.min.js";
+      s.async = true;
+      s.setAttribute('data-zone','164840');
+      s.setAttribute('data-cfasync','false');
+      document.head.appendChild(s);
+    }
+
+    loadMonetag();
+    localStorage.setItem('mt_last', String(now));
+    localStorage.setItem('mt_cooldown', String(now + 10*60*1000)); // 10 min off after load
+
+    // Remove Monetag after 10 minutes (hide/disappear)
+    setTimeout(function(){
+      try{
+        Array.from(document.querySelectorAll('script[src*="fpyf8.com/88/tag.min.js"]')).forEach(function(el){ el.remove(); });
+        Array.from(document.querySelectorAll('iframe[src*="fpyf8.com"], div[id*="monetag"], div[class*="monetag"]')).forEach(function(el){ el.remove(); });
+      }catch(e){}
+    }, 10*60*1000);
+
+  }catch(err){}
+})();
+</script>
+
+<!-- AUTO-ADSENSE v1 -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9201314612379702" crossorigin="anonymous"></script>
+
+<!-- AUTO-GTM-HEAD v1 -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RQFQZL6');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -22,6 +146,12 @@
   <meta name="theme-color" content="#0d6efd">
 </head>
 <body>
+<!-- AUTO-GTM-BODY v1 -->
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5RQFQZL6"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 px-3 py-2 bg-primary text-white rounded">Skip to main content</a>
 
   <header class="sticky-top" role="banner">
