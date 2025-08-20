@@ -52,6 +52,33 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 
+<!-- AdRoll -->
+<script type="text/javascript">
+  adroll_adv_id = "W2Y3FMKCS5CYPIP2WVPJYR";
+  adroll_pix_id = "DN6FLAXKHJFMFBKJRDBCH3";
+  adroll_version = "2.0";
+  (function(w, d, e, o, a) {
+    w.__adroll_loaded = true;
+    w.adroll = w.adroll || [];
+    w.adroll.f = [ 'setProperties', 'identify', 'track', 'identify_email', 'get_cookie' ];
+    var roundtripUrl = "https://s.adroll.com/j/" + adroll_adv_id + "/roundtrip.js";
+    for (a = 0; a < w.adroll.f.length; a++) {
+      w.adroll[w.adroll.f[a]] = w.adroll[w.adroll.f[a]] || (function(n) {
+        return function() { w.adroll.push([ n, arguments ]) }
+      })(w.adroll.f[a])
+    }
+    e = d.createElement('script'); o = d.getElementsByTagName('script')[0];
+    e.async = 1; e.src = roundtripUrl; o.parentNode.insertBefore(e, o);
+  })(window, document);
+  adroll.track("pageView");
+</script>
+<!-- /AdRoll -->
+
+<!-- Google Tag Manager -->
+<!-- End Google Tag Manager -->
+
+
+
 <!-- Google Tag Manager -->
 <!-- End Google Tag Manager -->
 
@@ -99,6 +126,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5RQFQZL6"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- Google Tag Manager (noscript) -->
 <!-- End Google Tag Manager (noscript) -->
 
 <!-- Google Tag Manager (noscript) -->
