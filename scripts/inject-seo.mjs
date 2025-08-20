@@ -1,10 +1,11 @@
 /* scripts/inject-seo.mjs
- * Injects:
- *  - Google Tag Manager (head loader + body noscript)
- *  - Google AdSense header loader
- *  - Canonical, meta description, OG/Twitter, JSON-LD (Organization/WebSite/WebPage)
- * Idempotent. Removes any prior GTM/AdSense loaders and our AUTO-SEO block.
- * Skips /beta, /backup, /backups (any case), .git, node_modules.
+ * Injects (idempotent):
+ *  - Google Tag Manager (head + body noscript)
+ *  - Google AdSense loader (head)
+ *  - AdRoll loader (head)
+ *  - Canonical, meta description, OG/Twitter, JSON-LD (Organization) block
+ * Also removes any older/duplicate GTM, AdSense, AdRoll snippets.
+ * Skips /beta, /backup, /backups, .git, node_modules.
  */
 
 import fs from "fs";
@@ -18,6 +19,8 @@ const SITE_DESC = process.env.SITE_DESC || "";
 const FACEBOOK_URL = process.env.FACEBOOK_URL || "";
 const ADSENSE_CLIENT = process.env.ADSENSE_CLIENT || "";
 const GTM_ID = process.env.GTM_ID || "";
+const ADROLL_ADV_ID = process.env.ADROLL_ADV_ID || "";
+const ADROLL_PIX_ID = process.env.ADROLL_PIX_ID || "";
 
 const EXCLUDE_DIRS = new Set([".git", "node_modules"]);
 const EXCLUDE_MATCH = [/^beta$/i, /^backup$/i, /^backups$/i];
@@ -45,9 +48,7 @@ function toPosix(p) {
 
 function relUrl(filePath) {
   const rel = toPosix(path.relative(ROOT, filePath));
-  // canonical rule: index.html at root => "/"
   if (rel.toLowerCase() === "index.html") return "/";
-  // nested index.html => "/folder/"
   if (rel.toLowerCase().endsWith("/index.html")) {
     return "/" + rel.slice(0, -"/index.html".length) + "/";
   }
@@ -55,58 +56,38 @@ function relUrl(filePath) {
 }
 
 function escapeAttr(v = "") {
-  return String(v)
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;");
+  return String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 }
 
-function readFile(p) {
-  return fs.readFileSync(p, "utf8");
-}
-function writeFile(p, s) {
-  fs.writeFileSync(p, s, "utf8");
-}
+function readFile(p) { return fs.readFileSync(p, "utf8"); }
+function writeFile(p, s) { fs.writeFileSync(p, s, "utf8"); }
 
 function hasHeadAndBody(html) {
   return /<head[^>]*>/i.test(html) && /<\/head>/i.test(html) && /<body[^>]*>/i.test(html);
 }
 
 function stripOldAutoBlock(html) {
-  const rx = new RegExp(
-    `${AUTO_START}[\\s\\S]*?${AUTO_END}`,
-    "i"
-  );
+  const rx = new RegExp(`${AUTO_START}[\\s\\S]*?${AUTO_END}`, "i");
   return html.replace(rx, "");
 }
 
-/** Remove any GTM loader in <head> (inline or external) and any GTM noscript in <body> */
+/* ---------- GTM ---------- */
 function stripAnyGTM(html) {
-  // Inline GTM loader (classic snippet) and any script loading /gtm.js
-  const gtmHeadRx =
-    /<script[^>]*>(?:(?!<\/script>).)*googletagmanager\.com\/gtm\.js[^<]*<\/script>\s*/gis;
+  const gtmHeadRx = /<script[^>]*>(?:(?!<\/script>).)*googletagmanager\.com\/gtm\.js[^<]*<\/script>\s*/gis;
   html = html.replace(gtmHeadRx, "");
-
-  const gtmExternalRx =
-    /<script[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/gtm\.js[^"']*["'][^>]*>\s*<\/script>\s*/gi;
+  const gtmExternalRx = /<script[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/gtm\.js[^"']*["'][^>]*>\s*<\/script>\s*/gi;
   html = html.replace(gtmExternalRx, "");
-
-  // Body noscript iframe
-  const gtmNoScriptRx =
-    /<noscript>\s*<iframe[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/ns\.html\?id=[^"']+["'][^>]*><\/iframe>\s*<\/noscript>\s*/gi;
+  const gtmNoScriptRx = /<noscript>\s*<iframe[^>]*\s+src=["']https:\/\/www\.googletagmanager\.com\/ns\.html\?id=[^"']+["'][^>]*><\/iframe>\s*<\/noscript>\s*/gi;
   html = html.replace(gtmNoScriptRx, "");
-
   return html;
 }
 
-/** Inserts GTM head loader right after opening <head>, and noscript right after <body> */
 function injectGTM(html, gtmId) {
-  if (!gtmId) return html;
-  if (!hasHeadAndBody(html)) return html;
-
+  if (!gtmId || !hasHeadAndBody(html)) return html;
   html = stripAnyGTM(html);
 
   const gtmHeadSnippet =
-    `<!-- Google Tag Manager -->
+`<!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -115,46 +96,74 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->`;
 
   const gtmBodyNoscript =
-    `<!-- Google Tag Manager (noscript) -->
+`<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${gtmId}"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->`;
 
-  // Insert at top of <head>
   html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${gtmHeadSnippet}\n`);
-
-  // Insert immediately after opening <body ...>
   html = html.replace(/<body([^>]*)>/i, (m, attrs) => `<body${attrs}>\n${gtmBodyNoscript}\n`);
-
   return html;
 }
 
-/** Remove any AdSense header loader and insert the canonical one */
+/* ---------- AdSense ---------- */
 function injectAdSense(html) {
-  if (!ADSENSE_CLIENT) return html;
-  if (!/<head[^>]*>/i.test(html) || !/<\/head>/i.test(html)) return html;
-
-  // Strip any existing loader
-  const anyAdsLoaderRx =
-    /<script[^>]*\s+src=["']\s*https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>\s*/ig;
+  if (!ADSENSE_CLIENT || !/<head[^>]*>/i.test(html)) return html;
+  const anyAdsLoaderRx = /<script[^>]*\s+src=["']\s*https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>\s*/ig;
   html = html.replace(anyAdsLoaderRx, "");
-
   const snippet =
-    `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${escapeAttr(
-      ADSENSE_CLIENT
-    )}"
+`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${escapeAttr(ADSENSE_CLIENT)}"
      crossorigin="anonymous"></script>`;
-
-  // Put after GTM (which we already prepend), still at top of head
   if (!html.includes(snippet)) {
     html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${snippet}\n`);
   }
-
   return html;
 }
 
+/* ---------- AdRoll ---------- */
+function stripAnyAdRoll(html) {
+  // Remove inline blocks that declare adroll_adv_id, or load s.adroll.com
+  const adrollInlineRx = /<script[^>]*>(?:(?!<\/script>).)*(?:adroll_adv_id|s\.adroll\.com\/j\/)[\s\S]*?<\/script>\s*/gi;
+  html = html.replace(adrollInlineRx, "");
+  // Remove external script tags to s.adroll.com if any
+  const adrollSrcRx = /<script[^>]*\s+src=["'][^"']*s\.adroll\.com\/j\/[^"']*["'][^>]*>\s*<\/script>\s*/gi;
+  html = html.replace(adrollSrcRx, "");
+  return html;
+}
+
+function injectAdRoll(html) {
+  if (!ADROLL_ADV_ID || !ADROLL_PIX_ID || !/<head[^>]*>/i.test(html)) return html;
+  html = stripAnyAdRoll(html);
+  const snippet =
+`<!-- AdRoll -->
+<script type="text/javascript">
+  adroll_adv_id = "${ADROLL_ADV_ID}";
+  adroll_pix_id = "${ADROLL_PIX_ID}";
+  adroll_version = "2.0";
+  (function(w, d, e, o, a) {
+    w.__adroll_loaded = true;
+    w.adroll = w.adroll || [];
+    w.adroll.f = [ 'setProperties', 'identify', 'track', 'identify_email', 'get_cookie' ];
+    var roundtripUrl = "https://s.adroll.com/j/" + adroll_adv_id + "/roundtrip.js";
+    for (a = 0; a < w.adroll.f.length; a++) {
+      w.adroll[w.adroll.f[a]] = w.adroll[w.adroll.f[a]] || (function(n) {
+        return function() { w.adroll.push([ n, arguments ]) }
+      })(w.adroll.f[a])
+    }
+    e = d.createElement('script'); o = d.getElementsByTagName('script')[0];
+    e.async = 1; e.src = roundtripUrl; o.parentNode.insertBefore(e, o);
+  })(window, document);
+  adroll.track("pageView");
+</script>
+<!-- /AdRoll -->`;
+
+  // Place after AdSense (near top of head)
+  html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${snippet}\n`);
+  return html;
+}
+
+/* ---------- SEO Block ---------- */
 function pickPageDescription(fileRelPath, html) {
-  // If page already has a <meta name="description"> keep it (we'll update/normalize inside the block)
   const m = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["'][^>]*>/i);
   if (m && m[1]) return m[1].trim();
 
@@ -168,16 +177,13 @@ function pickPageDescription(fileRelPath, html) {
   if (rel.includes("/contact") || rel === "/contact.html") {
     return "Contact Tech Ability — phone, email, or message. Friendly, accessible tech help in Christchurch and across NZ.";
   }
-  // fallback
   return SITE_DESC || "Tech support and NZ internet with Christchurch-based help.";
 }
 
 function buildAutoSeoBlock({ pageUrl, titleText, description }) {
-  // Ensure canonical absolute URL
   const canonical = SITE_URL ? `${SITE_URL}${pageUrl}` : pageUrl;
   const ogTitle = titleText || SITE_NAME;
   const ogDesc = description || SITE_DESC;
-
   const orgJson = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -203,15 +209,11 @@ function buildAutoSeoBlock({ pageUrl, titleText, description }) {
     DEFAULT_IMAGE ? `<meta name="twitter:image" content="${escapeAttr(DEFAULT_IMAGE)}">` : "",
     `<script type="application/ld+json">${JSON.stringify(orgJson)}</script>`,
     AUTO_END,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 function updateAutoSeo(html, filePath) {
   if (!hasHeadAndBody(html)) return html;
-
-  // Title
   const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const titleText = titleMatch ? titleMatch[1].trim() : SITE_NAME;
 
@@ -219,34 +221,30 @@ function updateAutoSeo(html, filePath) {
   const description = pickPageDescription(pageUrl, html);
   const block = buildAutoSeoBlock({ pageUrl, titleText, description });
 
-  // Remove any previous block then add a clean one (near top of head but after GTM/AdSense injections)
   let out = stripOldAutoBlock(html);
-  // If there’s a <meta name="description"> outside our block, we leave it as-is; our block defines the canonical one for crawlers.
-
-  // Put the AUTO block right after the first two injected snippets if present, otherwise near top of <head>.
-  const headOpenRx = /<head[^>]*>/i;
-  if (headOpenRx.test(out)) {
-    out = out.replace(headOpenRx, (m) => `${m}\n${block}\n`);
-  }
+  out = out.replace(/<head[^>]*>/i, (m) => `${m}\n${block}\n`);
   return out;
 }
 
+/* ---------- Pipeline ---------- */
 function processFile(absPath) {
   const original = readFile(absPath);
-  if (!/<html[^>]*>/i.test(original)) return null; // skip odd files
+  if (!/<html[^>]*>/i.test(original)) return null;
 
   let html = original;
 
-  // Inject GTM (head + body)
+  // 1) GTM (head + body)
   html = injectGTM(html, GTM_ID);
 
-  // Inject AdSense (head)
+  // 2) AdSense (head)
   html = injectAdSense(html);
 
-  // Inject/refresh SEO block
+  // 3) AdRoll (head)
+  html = injectAdRoll(html);
+
+  // 4) SEO block
   html = updateAutoSeo(html, absPath);
 
-  // Only write when changed
   if (html !== original) {
     writeFile(absPath, html);
     return true;
@@ -258,11 +256,9 @@ function main() {
   const files = walk(ROOT);
   let changed = 0;
   for (const f of files) {
-    // skip any path segment matching beta/backup/backups
     const posix = toPosix(path.relative(ROOT, f));
     const parts = posix.split("/");
     if (parts.some((p) => EXCLUDE_MATCH.some((rx) => rx.test(p)))) continue;
-
     const did = processFile(f);
     if (did) {
       changed++;
