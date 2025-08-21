@@ -1,4 +1,4 @@
-name: Auto Ads & Tracking Inject
+name: Auto Ads Inject (DirectLink, light)
 
 on:
   push:
@@ -7,20 +7,23 @@ on:
       - "**/*.html"
       - "scripts/inject-ads.mjs"
       - ".github/workflows/auto-ads-inject.yml"
-  workflow_dispatch:
   schedule:
-    # Daily safety pass (UTC 14:15 ~ early morning NZ)
-    - cron: "15 14 * * *"
+    # Nightly sweep to keep new pages up-to-date
+    - cron: "17 3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: site-writes
+  cancel-in-progress: false
+
 jobs:
   inject-ads:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: Checkout (full)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -30,28 +33,26 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Sync with remote (rebase main)
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout main
-          git reset --hard origin/main
-
-      - name: Inject GTM + AdSense + Monetag (mobile-light, NZ-time, A11y)
+      - name: Inject/Update lightweight DirectLink ads
         env:
-          GTM_ID: GTM-5RQFQZL6
-          ADSENSE_CLIENT: ca-pub-9201314612379702
-          MONETAG_ZONE: "164840"
-        run: |
-          node scripts/inject-ads.mjs
+          DIRECT_LINK_URL: "https://otieu.com/4/9747938"
+          DAILY_CAP: "2"          # per-device, per-day
+          SHOW_PROB: "0.05"       # 5% on both desktop & mobile
+          SKIP_PATHS: "admin/ads-status.html"
+        run: node scripts/inject-ads.mjs
 
-      - name: Commit & Push changes (if any)
+      - name: Commit & Push (rebase with autostash, safe for concurrent writes)
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            # Rebase safely even if remote moved; autostash to avoid "unstaged changes" error
+            git -c rebase.autoStash=true pull --rebase origin main || true
+
             git add -A
-            git commit -m "ci(ads): inject/update GTM + AdSense + Monetag (mobile-light, NZ-time)"
-            git push origin HEAD:main
+            git commit -m "ci(ads): inject/update lightweight DirectLink ad (5% w/ 2/day cap)"
+            git push --force-with-lease origin HEAD:main
           else
             echo "No changes to commit."
           fi

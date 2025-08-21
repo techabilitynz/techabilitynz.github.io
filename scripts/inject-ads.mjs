@@ -1,256 +1,260 @@
-// scripts/inject-ads.mjs
-// Injects: GTM (head+noscript), AdSense (<head>), Monetag runtime (probabilistic, NZ time, mobile-light, accessibility)
-// Also removes: any existing AdRoll + old Monetag/AdSense tags.
+// Lightweight DirectLink ad injector (no npm deps)
+// - Shows at 5% probability on both desktop & mobile
+// - Caps at 2 shows per device per day
+// - Skips /admin/ads-status.html
+// - Removes old Monetag/AdRoll and prior AUTO-ADS-INJECT blocks
+//
+// Env config (from workflow):
+//   DIRECT_LINK_URL (required)
+//   DAILY_CAP (default 2)
+//   SHOW_PROB (default 0.05)
+//   SKIP_PATHS (comma-separated relative paths to skip)
 
-import fs from 'fs';
-import path from 'path';
+import { promises as fs } from "fs";
+import path from "path";
 
 const ROOT = process.cwd();
-const GTM_ID = process.env.GTM_ID || 'GTM-5RQFQZL6';
-const ADSENSE_CLIENT = process.env.ADSENSE_CLIENT || 'ca-pub-9201314612379702';
-const MONETAG_ZONE = process.env.MONETAG_ZONE || '164840';
+const DIRECT_URL = process.env.DIRECT_LINK_URL || "https://otieu.com/4/9747938";
+const DAILY_CAP = Number(process.env.DAILY_CAP || "2");
+const SHOW_PROB = Number(process.env.SHOW_PROB || "0.05");
+const SKIP_LIST = (process.env.SKIP_PATHS || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean)
+  .map(n => n.replace(/^\/+/, "")); // normalise
 
-// ---------- helpers ----------
-const enc = 'utf8';
-const htmlFiles = [];
-function walk(dir) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name.startsWith('.git')) continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      walk(full);
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) {
-      htmlFiles.push(full);
-    }
-  }
-}
+const START_MARK = "<!-- AUTO-ADS-INJECT v2 START -->";
+const END_MARK   = "<!-- AUTO-ADS-INJECT v2 END -->";
 
-function contains(str, pattern) {
-  return new RegExp(pattern, 'i').test(str);
-}
-function removeScriptsByPatterns(html, patterns) {
-  let out = html;
-  patterns.forEach((p) => {
-    const re = new RegExp(
-      `<script[^>]*>[\\s\\S]*?${p}[\\s\\S]*?<\\/script>`,
-      'gi'
-    );
-    out = out.replace(re, '');
-    // also remove external script tags that match in src
-    const reSrc = new RegExp(
-      `<script[^>]*src=[^>]*${p}[^>]*><\\/script>`,
-      'gi'
-    );
-    out = out.replace(reSrc, '');
-  });
-  return out;
-}
+// Old blocks we may have inserted previously:
+const OLD_STARTS = [
+  "<!-- AUTO-ADS-INJECT START -->",
+  "<!-- AUTO-ADS-INJECT v1 START -->",
+];
+const OLD_ENDS = [
+  "<!-- AUTO-ADS-INJECT END -->",
+  "<!-- AUTO-ADS-INJECT v1 END -->",
+];
 
-function ensureInHead(html, snippet, marker) {
-  const hasMarker = html.includes(marker);
-  if (hasMarker) return html; // already injected by us
+// Regexes to strip old third-party ad code we used before
+const STRIP_PATTERNS = [
+  // Monetag / domains we used previously
+  /<script[^>]+monetag[^>]*><\/script>/gi,
+  /<script[^>]+fpyf8\.com\/\d+\/tag\.min\.js[^>]*><\/script>/gi,
+  // AdRoll
+  /<script[^>]+s\.adroll\.com\/j\/[^>]*><\/script>/gi,
+  /adroll_adv_id\s*=.+?<\/script>/gis,
+  // Our older inject blocks (v1)
+  new RegExp(`${escapeRegex("<!-- AUTO-ADS-INJECT START -->")}[\\s\\S]*?${escapeRegex("<!-- AUTO-ADS-INJECT END -->")}`, "gi"),
+  new RegExp(`${escapeRegex("<!-- AUTO-ADS-INJECT v1 START -->")}[\\s\\S]*?${escapeRegex("<!-- AUTO-ADS-INJECT v1 END -->")}`, "gi"),
+  // Remove duplicate v2 blocks if any
+  new RegExp(`${escapeRegex(START_MARK)}[\\s\\S]*?${escapeRegex(END_MARK)}`, "gi"),
+];
 
-  const headOpen = html.match(/<head[^>]*>/i);
-  if (!headOpen) return html;
+// Build the new lightweight injection snippet
+const snippet = `${START_MARK}
+<script>
+(function () {
+  // Config (embedded by CI)
+  var DIRECT_URL = ${JSON.stringify(DIRECT_URL)};
+  var DAILY_CAP  = ${JSON.stringify(DAILY_CAP)};
+  var SHOW_PROB  = ${JSON.stringify(SHOW_PROB)};
 
-  const insertPos = headOpen.index + headOpen[0].length;
-  return html.slice(0, insertPos) + `\n${snippet}\n` + html.slice(insertPos);
-}
+  // Escape hatch: add class="no-ads" on <html> to disable page-level
+  if (document.documentElement.classList.contains('no-ads')) return;
 
-function ensureAfterBodyOpen(html, snippet, marker) {
-  const hasMarker = html.includes(marker);
-  if (hasMarker) return html;
+  // Per-day cap key (localStorage)
+  var today = new Date();
+  var y = today.getFullYear();
+  var m = String(today.getMonth() + 1).padStart(2, '0');
+  var d = String(today.getDate()).padStart(2, '0');
+  var DAY_KEY = 'ta_ad_count_' + y + '-' + m + '-' + d;
 
-  const bodyOpen = html.match(/<body[^>]*>/i);
-  if (!bodyOpen) return html;
-
-  const insertPos = bodyOpen.index + bodyOpen[0].length;
-  return html.slice(0, insertPos) + `\n${snippet}\n` + html.slice(insertPos);
-}
-
-// ---------- snippets ----------
-const MARK_GTM_HEAD = '<!-- AUTO-GTM-HEAD v1 -->';
-const MARK_GTM_BODY = '<!-- AUTO-GTM-BODY v1 -->';
-const MARK_ADSENSE = '<!-- AUTO-ADSENSE v1 -->';
-const MARK_MONETAG = '<!-- AUTO-MONETAG v1 -->';
-
-// GTM head
-const SNIPPET_GTM_HEAD = `${MARK_GTM_HEAD}
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${GTM_ID}');</script>
-<!-- End Google Tag Manager -->`;
-
-// GTM body noscript
-const SNIPPET_GTM_BODY = `${MARK_GTM_BODY}
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->`;
-
-// AdSense head
-const SNIPPET_ADSENSE = `${MARK_ADSENSE}
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}" crossorigin="anonymous"></script>`;
-
-// Monetag runtime controller (NZ-time, random, mobile-light, A11y, 10-min cool-down)
-const SNIPPET_MONETAG = `${MARK_MONETAG}
-<script data-auto-monetag="v1">
-(function(){
-  try{
-    // Respect user settings
-    var saveData = (navigator.connection && navigator.connection.saveData) ? 1 : 0;
-    var prefersReducedMotion = false;
+  function canShow() {
     try {
-      prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    } catch(e){}
-
-    // NZ time helpers
-    function nzHour(){
-      try{
-        var h = new Intl.DateTimeFormat('en-NZ',{ timeZone:'Pacific/Auckland', hour:'2-digit', hour12:false }).format(new Date());
-        return parseInt(h, 10);
-      }catch(e){
-        // Fallback: approximate NZ by local hour (less accurate)
-        return new Date().getHours();
-      }
+      var count = Number(localStorage.getItem(DAY_KEY) || '0');
+      if (count >= DAILY_CAP) return false;
+      if (Math.random() >= SHOW_PROB) return false;
+      return true;
+    } catch (e) {
+      return false;
     }
-    function nzDayKey(){
-      try{
-        return new Intl.DateTimeFormat('en-NZ',{ timeZone:'Pacific/Auckland', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
-      }catch(e){
-        var d=new Date();
-        return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
-      }
+  }
+
+  function markShown() {
+    try {
+      var c = Number(localStorage.getItem(DAY_KEY) || '0') + 1;
+      localStorage.setItem(DAY_KEY, String(c));
+    } catch (e) {}
+  }
+
+  function inject() {
+    // Container (not focusable / hidden from AT for non-intrusiveness)
+    var box = document.createElement('div');
+    box.className = 'ta-ad-cta';
+    box.setAttribute('aria-hidden', 'true');
+    box.setAttribute('role', 'presentation');
+    box.style.cssText = [
+      'position:fixed',
+      'bottom:16px',
+      'right:16px',
+      'z-index:2147483646',
+      'display:flex',
+      'align-items:center',
+      'gap:8px'
+    ].join(';');
+
+    // Button-like link
+    var a = document.createElement('a');
+    a.href = DIRECT_URL;
+    a.target = '_blank';
+    a.rel = 'nofollow sponsored';
+    a.tabIndex = -1;
+    a.style.cssText = [
+      'display:inline-block',
+      'padding:10px 12px',
+      'background:#111',
+      'color:#fff',
+      'border-radius:12px',
+      'text-decoration:none',
+      'box-shadow:0 8px 24px rgba(0,0,0,.25)',
+      'font:600 14px/1.2 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif',
+      'opacity:.94'
+    ].join(';');
+    a.textContent = 'Sponsored: useful tech offers';
+
+    // Close (not focusable)
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.tabIndex = -1;
+    close.setAttribute('aria-hidden', 'true');
+    close.style.cssText = [
+      'background:transparent',
+      'border:0',
+      'color:#fff',
+      'font-size:16px',
+      'cursor:pointer',
+      'line-height:1'
+    ].join(';');
+    close.innerHTML = '\\u00D7';
+    close.onclick = function () {
+      try { box.remove(); } catch (e) { document.body.removeChild(box); }
+    };
+
+    box.appendChild(a);
+    box.appendChild(close);
+    document.body.appendChild(box);
+
+    markShown();
+  }
+
+  function init() {
+    if (!canShow()) return;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', inject, { once: true });
+    } else {
+      inject();
     }
-    function hash(s){ for(var i=0,h=0;i<s.length;i++){ h=(h<<5)-h+s.charCodeAt(i); h|=0 } return Math.abs(h); }
+  }
 
-    var hour = nzHour();
-    var dayKey = nzDayKey();
-    var h = hash(dayKey);
-    var quiet1 = h % 24;
-    var quiet2 = (Math.floor(h/7) % 24);
-    if (quiet1 === quiet2) quiet2 = (quiet2 + 6) % 24;
-    var inQuiet = (hour === quiet1 || hour === quiet2);
-
-    var isMobile = /Mobi|Android/i.test(navigator.userAgent) || (Math.min(window.innerWidth, window.innerHeight) <= 576);
-
-    // Base probabilities
-    var base = isMobile ? 0.15 : 0.45; // mobile-light
-    if (saveData) base *= 0.4;
-    if (prefersReducedMotion) base *= 0.7;
-    if (inQuiet) base *= 0.2;
-
-    var now = Date.now();
-    var last = parseInt(localStorage.getItem('mt_last')||'0',10);
-    var cooldown = parseInt(localStorage.getItem('mt_cooldown')||'0',10);
-
-    // Honor cool-down window (10 min)
-    if (now < cooldown) return;
-
-    // Randomize to not be too frequent
-    if (Math.random() >= base) {
-      // brief cool-down to avoid retry spam (5 min)
-      localStorage.setItem('mt_cooldown', String(now + 5*60*1000));
-      return;
-    }
-
-    // Accessibility: mark ad nodes aria-hidden when they appear
-    function markA11y(el){
-      try{
-        el.setAttribute('aria-hidden','true');
-        el.setAttribute('tabindex','-1');
-        el.setAttribute('role','presentation');
-      }catch(e){}
-    }
-    var mo = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        m.addedNodes && Array.from(m.addedNodes).forEach(function(n){
-          if (n.nodeType !== 1) return;
-          var el = n;
-          if (el.tagName === 'IFRAME' && (el.src||'').indexOf('fpyf8.com') !== -1) markA11y(el);
-          var idc = (el.id||'').toLowerCase() + ' ' + (el.className||'').toString().toLowerCase();
-          if (idc.indexOf('monetag') !== -1) markA11y(el);
-          el.querySelectorAll('iframe,div').forEach(function(c){
-            var idc2 = (c.id||'').toLowerCase() + ' ' + (c.className||'').toString().toLowerCase();
-            if ((c.src||'').indexOf('fpyf8.com') !== -1 || idc2.indexOf('monetag') !== -1) markA11y(c);
-          });
-        });
-      });
-    });
-    try{ mo.observe(document.documentElement, {childList:true, subtree:true}); }catch(e){}
-
-    // Load Monetag script
-    function loadMonetag(){
-      var s = document.createElement('script');
-      s.src = "https://fpyf8.com/88/tag.min.js";
-      s.async = true;
-      s.setAttribute('data-zone','${MONETAG_ZONE}');
-      s.setAttribute('data-cfasync','false');
-      document.head.appendChild(s);
-    }
-
-    loadMonetag();
-    localStorage.setItem('mt_last', String(now));
-    localStorage.setItem('mt_cooldown', String(now + 10*60*1000)); // 10 min off after load
-
-    // Remove Monetag after 10 minutes (hide/disappear)
-    setTimeout(function(){
-      try{
-        Array.from(document.querySelectorAll('script[src*="fpyf8.com/88/tag.min.js"]')).forEach(function(el){ el.remove(); });
-        Array.from(document.querySelectorAll('iframe[src*="fpyf8.com"], div[id*="monetag"], div[class*="monetag"]')).forEach(function(el){ el.remove(); });
-      }catch(e){}
-    }, 10*60*1000);
-
-  }catch(err){}
+  try { init(); } catch (e) {}
 })();
-</script>`;
+</script>
+${END_MARK}`;
 
-// ---------- main ----------
-walk(ROOT);
+// Walk repo and process HTML files
+const edited = [];
 
-let changed = 0;
-for (const file of htmlFiles) {
-  let html = fs.readFileSync(file, enc);
+await walkAndProcess(".");
 
-  // 1) Strip AdRoll (if present)
-  html = removeScriptsByPatterns(html, [
-    'adroll_adv_id',
-    's\\.adroll\\.com\\/j\\/',
-    'adroll\\.track'
-  ]);
+if (edited.length) {
+  console.log(`Updated ${edited.length} file(s):`);
+  edited.forEach(f => console.log(" - " + f));
+} else {
+  console.log("No HTML changes were needed.");
+}
 
-  // 2) Strip old Monetag (if present)
-  html = removeScriptsByPatterns(html, [
-    'fpyf8\\.com\\/88\\/tag\\.min\\.js',
-    'data-zone=["\\\']?\\d+["\\\']?'
-  ]);
-  // 3) Strip any *existing* AdSense tag to re-standardize
-  html = removeScriptsByPatterns(html, [
-    'pagead2\\.googlesyndication\\.com\\/pagead\\/js\\/adsbygoogle\\.js\\?client='
-  ]);
+// ---------------- helpers ----------------
+async function walkAndProcess(relDir) {
+  const dir = path.join(ROOT, relDir);
+  const entries = await fs.readdir(dir, { withFileTypes: true });
 
-  const before = html;
+  for (const ent of entries) {
+    const name = ent.name;
+    if (name.startsWith(".git")) continue;
+    if (ent.isDirectory()) {
+      await walkAndProcess(path.join(relDir, name));
+      continue;
+    }
+    if (!name.toLowerCase().endsWith(".html")) continue;
 
-  // 4) Ensure GTM (head)
-  html = ensureInHead(html, SNIPPET_GTM_HEAD, MARK_GTM_HEAD);
+    const rel = path.join(relDir, name).replace(/^[.][/\\]?/, "").replace(/\\/g, "/");
+    if (shouldSkip(rel)) {
+      // Still strip old ad code if present, but do NOT add new snippet
+      const changed = await stripOnly(path.join(ROOT, rel));
+      if (changed) edited.push(rel);
+      continue;
+    }
 
-  // 5) Ensure AdSense (head)
-  html = ensureInHead(html, SNIPPET_ADSENSE, MARK_ADSENSE);
-
-  // 6) Ensure Monetag runtime controller (head)
-  html = ensureInHead(html, SNIPPET_MONETAG, MARK_MONETAG);
-
-  // 7) Ensure GTM noscript after <body>
-  html = ensureAfterBodyOpen(html, SNIPPET_GTM_BODY, MARK_GTM_BODY);
-
-  if (html !== before) {
-    fs.writeFileSync(file, html, enc);
-    changed++;
-    console.log(`Updated: ${path.relative(ROOT, file)}`);
+    const changed = await updateHtml(path.join(ROOT, rel));
+    if (changed) edited.push(rel);
   }
 }
 
-console.log(`Done. Files changed: ${changed}`);
+function shouldSkip(relPath) {
+  // Explicit skip list
+  if (SKIP_LIST.some(p => relPath.toLowerCase() === p.toLowerCase())) return true;
+  return false;
+}
+
+async function stripOnly(absFile) {
+  let html = await fs.readFile(absFile, "utf8");
+  const original = html;
+
+  // Remove any known ad blocks / third-party code
+  STRIP_PATTERNS.forEach(rx => {
+    html = html.replace(rx, "");
+  });
+
+  if (html !== original) {
+    await fs.writeFile(absFile, tidy(html), "utf8");
+    return true;
+  }
+  return false;
+}
+
+async function updateHtml(absFile) {
+  let html = await fs.readFile(absFile, "utf8");
+  const original = html;
+
+  // 1) Strip any known older ad blocks / Monetag / AdRoll
+  STRIP_PATTERNS.forEach(rx => {
+    html = html.replace(rx, "");
+  });
+
+  // 2) Ensure we don't have multiple v2 blocks
+  html = html.replace(new RegExp(`${escapeRegex(START_MARK)}[\\s\\S]*?${escapeRegex(END_MARK)}`, "gi"), "");
+
+  // 3) Inject just before </body> if present, otherwise at the end
+  const bodyCloseRx = /<\/body\s*>/i;
+  if (bodyCloseRx.test(html)) {
+    html = html.replace(bodyCloseRx, `${snippet}\n</body>`);
+  } else {
+    html = html + `\n${snippet}\n`;
+  }
+
+  if (html !== original) {
+    await fs.writeFile(absFile, tidy(html), "utf8");
+    return true;
+  }
+  return false;
+}
+
+function tidy(s) {
+  // Collapse extra blank lines introduced by replaces
+  return s.replace(/\n{3,}/g, "\n\n");
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
