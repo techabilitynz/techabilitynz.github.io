@@ -1,4 +1,4 @@
-name: Auto Ads Inject (DirectLink, light)
+name: Auto Ads Inject
 
 on:
   push:
@@ -7,23 +7,22 @@ on:
       - "**/*.html"
       - "scripts/inject-ads.mjs"
       - ".github/workflows/auto-ads-inject.yml"
-  schedule:
-    # Nightly sweep to keep new pages up-to-date
-    - cron: "17 3 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# Prevent multiple writer jobs (SEO, sitemap, ads) from pushing at once.
 concurrency:
-  group: site-writes
+  group: writer-${{ github.repository }}
   cancel-in-progress: false
 
 jobs:
   inject-ads:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout (full)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -33,26 +32,48 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Inject/Update lightweight DirectLink ads
-        env:
-          DIRECT_LINK_URL: "https://otieu.com/4/9747938"
-          DAILY_CAP: "2"          # per-device, per-day
-          SHOW_PROB: "0.05"       # 5% on both desktop & mobile
-          SKIP_PATHS: "admin/ads-status.html"
+      - name: Run injection script
         run: node scripts/inject-ads.mjs
 
-      - name: Commit & Push (rebase with autostash, safe for concurrent writes)
+      - name: Commit & Push (robust, with retries)
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.name  "$GIT_AUTHOR_NAME"
+            git config user.email "$GIT_AUTHOR_EMAIL"
 
-            # Rebase safely even if remote moved; autostash to avoid "unstaged changes" error
-            git -c rebase.autoStash=true pull --rebase origin main || true
+            tries=0
+            until [ $tries -ge 6 ]
+            do
+              # Re-sync with remote; autostash avoids "unstaged changes" failures
+              git fetch origin main
+              git -c rebase.autoStash=true pull --rebase origin main || true
 
-            git add -A
-            git commit -m "ci(ads): inject/update lightweight DirectLink ad (5% w/ 2/day cap)"
-            git push --force-with-lease origin HEAD:main
+              git add -A
+              if git diff --cached --quiet; then
+                echo "No staged changes after rebase. Skipping commit."
+              else
+                git commit -m "ci(ads): inject/update lightweight DirectLink ad (5% w/ 2/day cap)"
+              fi
+
+              # Safer than --force; only overwrites if remote head didn’t move since our fetch
+              if git push --force-with-lease origin HEAD:main; then
+                echo "Push succeeded."
+                exit 0
+              fi
+
+              tries=$((tries+1))
+              delay=$(( (2 ** tries) * 2 ))
+              echo "Push failed (attempt $tries). Sleeping ${delay}s and retrying…"
+              sleep $delay
+            done
+
+            echo "Push still failing after $tries attempts."
+            exit 1
           else
             echo "No changes to commit."
           fi
