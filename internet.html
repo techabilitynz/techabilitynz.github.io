@@ -247,6 +247,118 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<<<<<<< HEAD
   <script src="/scripts/monetag-control.js" defer></script>
+=======
+<!-- AUTO-ADS-INJECT v2 START -->
+<script>
+(function () {
+  // Config (embedded by CI)
+  var DIRECT_URL = "https://otieu.com/4/9747938";
+  var DAILY_CAP  = 2;
+  var SHOW_PROB  = 0.05;
+
+  // Escape hatch: add class="no-ads" on <html> to disable page-level
+  if (document.documentElement.classList.contains('no-ads')) return;
+
+  // Per-day cap key (localStorage)
+  var today = new Date();
+  var y = today.getFullYear();
+  var m = String(today.getMonth() + 1).padStart(2, '0');
+  var d = String(today.getDate()).padStart(2, '0');
+  var DAY_KEY = 'ta_ad_count_' + y + '-' + m + '-' + d;
+
+  function canShow() {
+    try {
+      var count = Number(localStorage.getItem(DAY_KEY) || '0');
+      if (count >= DAILY_CAP) return false;
+      if (Math.random() >= SHOW_PROB) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function markShown() {
+    try {
+      var c = Number(localStorage.getItem(DAY_KEY) || '0') + 1;
+      localStorage.setItem(DAY_KEY, String(c));
+    } catch (e) {}
+  }
+
+  function inject() {
+    // Container (not focusable / hidden from AT for non-intrusiveness)
+    var box = document.createElement('div');
+    box.className = 'ta-ad-cta';
+    box.setAttribute('aria-hidden', 'true');
+    box.setAttribute('role', 'presentation');
+    box.style.cssText = [
+      'position:fixed',
+      'bottom:16px',
+      'right:16px',
+      'z-index:2147483646',
+      'display:flex',
+      'align-items:center',
+      'gap:8px'
+    ].join(';');
+
+    // Button-like link
+    var a = document.createElement('a');
+    a.href = DIRECT_URL;
+    a.target = '_blank';
+    a.rel = 'nofollow sponsored';
+    a.tabIndex = -1;
+    a.style.cssText = [
+      'display:inline-block',
+      'padding:10px 12px',
+      'background:#111',
+      'color:#fff',
+      'border-radius:12px',
+      'text-decoration:none',
+      'box-shadow:0 8px 24px rgba(0,0,0,.25)',
+      'font:600 14px/1.2 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif',
+      'opacity:.94'
+    ].join(';');
+    a.textContent = 'Sponsored: useful tech offers';
+
+    // Close (not focusable)
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.tabIndex = -1;
+    close.setAttribute('aria-hidden', 'true');
+    close.style.cssText = [
+      'background:transparent',
+      'border:0',
+      'color:#fff',
+      'font-size:16px',
+      'cursor:pointer',
+      'line-height:1'
+    ].join(';');
+    close.innerHTML = '\u00D7';
+    close.onclick = function () {
+      try { box.remove(); } catch (e) { document.body.removeChild(box); }
+    };
+
+    box.appendChild(a);
+    box.appendChild(close);
+    document.body.appendChild(box);
+
+    markShown();
+  }
+
+  function init() {
+    if (!canShow()) return;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', inject, { once: true });
+    } else {
+      inject();
+    }
+  }
+
+  try { init(); } catch (e) {}
+})();
+</script>
+<!-- AUTO-ADS-INJECT v2 END -->
+>>>>>>> e32fc81 (ci(ads): inject/update lightweight DirectLink ad (5% w/ 2/day cap))
 </body>
 </html>
