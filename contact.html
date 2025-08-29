@@ -1,234 +1,29 @@
 <!doctype html>
 <html lang="en-US">
 <head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9201314612379702" crossorigin="anonymous"></script>
-
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-5RQFQZL6');</script>
-<!-- End Google Tag Manager -->
-
-
-
-
-
-<!-- AUTO-MONETAG v1 -->
-<script data-auto-monetag="v1">
-(function(){
-  try{
-    // Respect user settings
-    var saveData = (navigator.connection && navigator.connection.saveData) ? 1 : 0;
-    var prefersReducedMotion = false;
-    try {
-      prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    } catch(e){}
-
-    // NZ time helpers
-    function nzHour(){
-      try{
-        var h = new Intl.DateTimeFormat('en-NZ',{ timeZone:'Pacific/Auckland', hour:'2-digit', hour12:false }).format(new Date());
-        return parseInt(h, 10);
-      }catch(e){
-        // Fallback: approximate NZ by local hour (less accurate)
-        return new Date().getHours();
-      }
-    }
-    function nzDayKey(){
-      try{
-        return new Intl.DateTimeFormat('en-NZ',{ timeZone:'Pacific/Auckland', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
-      }catch(e){
-        var d=new Date();
-        return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
-      }
-    }
-    function hash(s){ for(var i=0,h=0;i<s.length;i++){ h=(h<<5)-h+s.charCodeAt(i); h|=0 } return Math.abs(h); }
-
-    var hour = nzHour();
-    var dayKey = nzDayKey();
-    var h = hash(dayKey);
-    var quiet1 = h % 24;
-    var quiet2 = (Math.floor(h/7) % 24);
-    if (quiet1 === quiet2) quiet2 = (quiet2 + 6) % 24;
-    var inQuiet = (hour === quiet1 || hour === quiet2);
-
-    var isMobile = /Mobi|Android/i.test(navigator.userAgent) || (Math.min(window.innerWidth, window.innerHeight) <= 576);
-
-    // Base probabilities
-    var base = isMobile ? 0.15 : 0.45; // mobile-light
-    if (saveData) base *= 0.4;
-    if (prefersReducedMotion) base *= 0.7;
-    if (inQuiet) base *= 0.2;
-
-    var now = Date.now();
-    var last = parseInt(localStorage.getItem('mt_last')||'0',10);
-    var cooldown = parseInt(localStorage.getItem('mt_cooldown')||'0',10);
-
-    // Honor cool-down window (10 min)
-    if (now < cooldown) return;
-
-    // Randomize to not be too frequent
-    if (Math.random() >= base) {
-      // brief cool-down to avoid retry spam (5 min)
-      localStorage.setItem('mt_cooldown', String(now + 5*60*1000));
-      return;
-    }
-
-    // Accessibility: mark ad nodes aria-hidden when they appear
-    function markA11y(el){
-      try{
-        el.setAttribute('aria-hidden','true');
-        el.setAttribute('tabindex','-1');
-        el.setAttribute('role','presentation');
-      }catch(e){}
-    }
-    var mo = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        m.addedNodes && Array.from(m.addedNodes).forEach(function(n){
-          if (n.nodeType !== 1) return;
-          var el = n;
-          if (el.tagName === 'IFRAME' && (el.src||'').indexOf('fpyf8.com') !== -1) markA11y(el);
-          var idc = (el.id||'').toLowerCase() + ' ' + (el.className||'').toString().toLowerCase();
-          if (idc.indexOf('monetag') !== -1) markA11y(el);
-          el.querySelectorAll('iframe,div').forEach(function(c){
-            var idc2 = (c.id||'').toLowerCase() + ' ' + (c.className||'').toString().toLowerCase();
-            if ((c.src||'').indexOf('fpyf8.com') !== -1 || idc2.indexOf('monetag') !== -1) markA11y(c);
-          });
-        });
-      });
-    });
-    try{ mo.observe(document.documentElement, {childList:true, subtree:true}); }catch(e){}
-
-    // Load Monetag script
-    function loadMonetag(){
-      var s = document.createElement('script');
-      s.src = "https://fpyf8.com/88/tag.min.js";
-      s.async = true;
-      s.setAttribute('data-zone','164840');
-      s.setAttribute('data-cfasync','false');
-      document.head.appendChild(s);
-    }
-
-    loadMonetag();
-    localStorage.setItem('mt_last', String(now));
-    localStorage.setItem('mt_cooldown', String(now + 10*60*1000)); // 10 min off after load
-
-    // Remove Monetag after 10 minutes (hide/disappear)
-    setTimeout(function(){
-      try{
-        Array.from(document.querySelectorAll('script[src*="fpyf8.com/88/tag.min.js"]')).forEach(function(el){ el.remove(); });
-        Array.from(document.querySelectorAll('iframe[src*="fpyf8.com"], div[id*="monetag"], div[class*="monetag"]')).forEach(function(el){ el.remove(); });
-      }catch(e){}
-    }, 10*60*1000);
-
-  }catch(err){}
-})();
-</script>
-
-<!-- AUTO-ADSENSE v1 -->
-<!-- AUTO-GTM-HEAD v1 -->
-
-<!-- /AdRoll -->
-
-<!-- AdRoll -->
-
-<!-- /AdRoll -->
-
-<meta charset="utf-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="google-adsense-account" content="ca-pub-9201314612379702">
   <title>Tech Ability, Contact us</title>
-  
-
-  <!-- Social -->
-  
-  
-  
-  
-  
-  
+  <meta name="description" content="Contact Tech Ability, friendly, accessible support for Christchurch and NZ. Call or text 64221843756. Email sales@techability.co.nz.">
+  <link rel="canonical" href="https://www.techability.co.nz/contact.html">
+  <link rel="icon" href="favicon.ico">
 
   <!-- Fonts and CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="favicon.ico">
-  <meta name="theme-color" content="#0a66ff">
-
-  
-  
-  <meta property="article:publisher" content="https://www.facebook.com/TechAbilityCHCH">
-  <meta property="og:see_also" content="https://www.facebook.com/TechAbilityCHCH">
-  
-  
-  
-  <script type="application/ld+json" data-techability="seo">[{"@context":"https://schema.org","@type":"Organization","name":"Tech Ability","url":"https://www.techability.co.nz","logo":"https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg","sameAs":["https://www.facebook.com/TechAbilityCHCH"],"areaServed":"NZ","knowsAbout":["Fibre broadband","Hyperfibre","Internet provider New Zealand","Wi‑Fi help","Smart home setup","Computer support","Phone support"]},{"@context":"https://schema.org","@type":"WebSite","name":"Tech Ability","url":"https://www.techability.co.nz","potentialAction":{"@type":"SearchAction","target":"https://www.techability.co.nz/search?q={search_term_string}","query-input":"required name=search_term_string"},"inLanguage":"en-NZ"},{"@context":"https://schema.org","@type":"Service","name":"Fibre broadband (NZ)","provider":{"@type":"Organization","name":"Tech Ability","url":"https://www.techability.co.nz"},"areaServed":"New Zealand","serviceType":"Internet Service","url":"https://www.techability.co.nz/internet.html"},{"@context":"https://schema.org","@type":"Service","name":"Hyperfibre internet (NZ)","provider":{"@type":"Organization","name":"Tech Ability","url":"https://www.techability.co.nz"},"areaServed":"New Zealand","serviceType":"Internet Service","url":"https://www.techability.co.nz/internet.html#hyperfibre"},{"@context":"https://schema.org","@type":"WebPage","name":"Tech Ability, Contact us","url":"https://www.techability.co.nz/contact.html"}]</script>
-
-<meta name="robots" content="index,follow">
-
-<meta name="description" content="Contact Tech Ability — friendly, accessible support for Christchurch &amp;amp; NZ. Call or text 64221843756. Email sales@techability.co.nz.">
-<link rel="canonical" href="https://www.techability.co.nz/contact.html">
-
-
-
-<!-- AUTO-SEO-INJECT v1 -->
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Tech Ability">
-<meta property="og:url" content="https://www.techability.co.nz/contact.html">
-<meta property="og:title" content="Tech Ability, Contact us">
-<meta property="og:description" content="Contact Tech Ability — friendly, accessible support for Christchurch &amp;amp; NZ. Call or text 64221843756. Email sales@techability.co.nz.">
-<meta property="og:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tech Ability, Contact us">
-<meta name="twitter:description" content="Contact Tech Ability — friendly, accessible support for Christchurch &amp;amp; NZ. Call or text 64221843756. Email sales@techability.co.nz.">
-<meta name="twitter:image" content="https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Tech Ability","url":"https://www.techability.co.nz","sameAs":["https://www.facebook.com/TechAbilityCHCH"],"areaServed":"NZ"}</script>
-<!-- /AUTO-SEO-INJECT -->
+  <style>
+    .include-object { display:block; width:100%; border:0; }
+    .include-wrap { display:none; }
+  </style>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5RQFQZL6"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-
-
-<!-- AUTO-GTM-BODY v1 -->
-
-  <!-- Header -->
-  <header class="sticky-top bg-white">
-    <nav class="navbar navbar-expand-lg border-bottom" aria-label="Primary">
-      <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
-          <img src="https://i.postimg.cc/fLLRfK27/image.png?v=1" alt="Tech Ability logo" height="36">
-          <span class="fw-semibold text-dark">Tech Ability</span>
-        </a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"
-                aria-controls="nav" aria-expanded="false" aria-label="Toggle menu">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div id="nav" class="collapse navbar-collapse">
-          <ul class="navbar-nav ms-auto align-items-lg-center">
-            <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="/index.html#services">Services</a></li>
-            <li class="nav-item"><a class="nav-link" href="/internet.html">Internet</a></li>
-            <li class="nav-item"><a class="nav-link active" href="/contact.html" aria-current="page">Contact</a></li>
-            <li class="nav-item ms-lg-3">
-              <a class="btn btn-primary btn-sm px-3" href="tel:+64221843756">
-                <i class="bi bi-telephone me-1" aria-hidden="true"></i> 022 184 3756
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-  </header>
+  <!-- Nav will be injected or shown via object fallback -->
+  <div id="nav-placeholder"></div>
+  <div id="nav-object-wrap" class="include-wrap" aria-hidden="false">
+    <object id="nav-object" class="include-object" type="text/html" data="nav.html"></object>
+  </div>
 
   <!-- Hero -->
   <section class="hero section-space" aria-labelledby="contact-hero-heading">
@@ -237,7 +32,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="col-lg-6">
           <h1 id="contact-hero-heading" class="display-5 fw-bold">Contact Tech Ability</h1>
           <p class="lead mt-3 mb-0">
-            We offer friendly help that is accessible to everyone. Tell us how you prefer to communicate: phone, email, or text.
+            We offer friendly help that is accessible to everyone. Tell us how you prefer to communicate, phone, email, or text.
           </p>
         </div>
         <div class="col-lg-6">
@@ -257,10 +52,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="container">
         <div class="row g-4">
           <div class="col-md-4">
-            <article class="card card-service h-100 shadow-sm" aria-labelledby="card-call">
+            <article class="card card-service h-100 shadow-sm">
               <div class="card-body">
-                <h2 id="card-call" class="h5 d-flex align-items-center gap-2">
-                  <i class="bi bi-telephone text-primary" aria-hidden="true"></i> Call or text
+                <h2 class="h5 d-flex align-items-center gap-2">
+                  <i class="bi bi-telephone text-primary"></i> Call or text
                 </h2>
                 <p class="mb-2">Phone, <a href="tel:+64221843756">022 184 3756</a></p>
                 <p class="mb-0 small text-secondary">If you prefer text only, say so in your first message.</p>
@@ -268,24 +63,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </article>
           </div>
           <div class="col-md-4">
-            <article class="card card-service h-100 shadow-sm" aria-labelledby="card-email">
+            <article class="card card-service h-100 shadow-sm">
               <div class="card-body">
-                <h2 id="card-email" class="h5 d-flex align-items-center gap-2">
-                  <i class="bi bi-envelope-paper text-primary" aria-hidden="true"></i> Email
+                <h2 class="h5 d-flex align-items-center gap-2">
+                  <i class="bi bi-envelope-paper text-primary"></i> Email
                 </h2>
                 <p class="mb-0"><a href="mailto:sales@techability.co.nz">sales@techability.co.nz</a></p>
               </div>
             </article>
           </div>
           <div class="col-md-4">
-            <article class="card card-service h-100 shadow-sm" aria-labelledby="card-access">
+            <article class="card card-service h-100 shadow-sm">
               <div class="card-body">
-                <h2 id="card-access" class="h5 d-flex align-items-center gap-2">
-                  <i class="bi bi-universal-access-circle text-primary" aria-hidden="true"></i> Accessibility options
+                <h2 class="h5 d-flex align-items-center gap-2">
+                  <i class="bi bi-universal-access-circle text-primary"></i> Accessibility options
                 </h2>
                 <ul class="small mb-0 ps-3">
                   <li>Plain language, no jargon</li>
-                  <li>Phone, text, or email — your choice</li>
+                  <li>Phone, text, or email, your choice</li>
                   <li>Screen reader friendly documents on request</li>
                 </ul>
               </div>
@@ -296,62 +91,52 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
 
     <!-- Team -->
-    <section class="section-space" aria-labelledby="team-heading">
+    <section class="section-space">
       <div class="container">
         <div class="text-center mb-4">
-          <h2 id="team-heading" class="fw-bold">Meet our team</h2>
+          <h2 class="fw-bold">Meet our team</h2>
           <p class="text-secondary mb-0">Real people who love making tech simple</p>
         </div>
-
         <div class="row g-4">
-          <!-- Ricky -->
           <div class="col-lg-4 col-md-6">
-            <article class="card h-100 shadow-sm" itemscope itemtype="http://schema.org/Person" aria-labelledby="ricky-name">
+            <article class="card h-100 shadow-sm">
               <div class="card-body">
                 <div class="d-flex align-items-center">
                   <img src="https://i.ibb.co/GcxfcDd/image.png" class="rounded-circle me-3" width="96" height="96" alt="Portrait of Ricky Reeves, CEO">
                   <div>
-                    <h3 id="ricky-name" class="h5 mb-1" itemprop="name">Ricky Reeves, CEO</h3>
-                    <p class="small text-secondary mb-0" itemprop="jobTitle">Founder, accessibility lead</p>
+                    <h3 class="h5 mb-1">Ricky Reeves, CEO</h3>
+                    <p class="small text-secondary mb-0">Founder, accessibility lead</p>
                   </div>
                 </div>
-                <p class="mt-3 mb-0">
-                  Diagnosed with cancer in 2006 which led to legal blindness, Ricky has deep expertise with screen readers and Apple accessibility. His goal is simple: make tech confidence possible for everyone.
-                </p>
+                <p class="mt-3 mb-0">Diagnosed with cancer in 2006 which led to legal blindness, Ricky has deep expertise with screen readers and Apple accessibility.</p>
               </div>
             </article>
           </div>
-          <!-- Thomas -->
           <div class="col-lg-4 col-md-6">
-            <article class="card h-100 shadow-sm" itemscope itemtype="http://schema.org/Person" aria-labelledby="thomas-name">
+            <article class="card h-100 shadow-sm">
               <div class="card-body">
                 <div class="d-flex align-items-center">
                   <img src="https://i.ibb.co/Y83LJZP/image.png" class="rounded-circle me-3" width="96" height="96" alt="Portrait of Thomas Bernard, IT Admin">
                   <div>
-                    <h3 id="thomas-name" class="h5 mb-1" itemprop="name">Thomas Bernard, IT Admin</h3>
-                    <p class="small text-secondary mb-0" itemprop="jobTitle">Web, tools, and customer support</p>
+                    <h3 class="h5 mb-1">Thomas Bernard, IT Admin</h3>
+                    <p class="small text-secondary mb-0">Web, tools, and customer support</p>
                   </div>
                 </div>
-                <p class="mt-3 mb-0">
-                  Thomas looks after our site and systems, and helps customers by email and phone. He enjoys radio and Toastmasters.
-                </p>
+                <p class="mt-3 mb-0">Thomas looks after our site and systems, and helps customers by email and phone. He enjoys radio and Toastmasters.</p>
               </div>
             </article>
           </div>
-          <!-- Jordan -->
           <div class="col-lg-4 col-md-6">
-            <article class="card h-100 shadow-sm" itemscope itemtype="http://schema.org/Person" aria-labelledby="jordan-name">
+            <article class="card h-100 shadow-sm">
               <div class="card-body">
                 <div class="d-flex align-items-center">
-                  <img src="https://i.ibb.co/ZXBX2WH/image.png" class="rounded-circle me-3" width="96" height="96" alt="Portrait of Jordan Langley, Weather enthusiast and tech specialist">
+                  <img src="https://i.ibb.co/ZXBX2WH/image.png" class="rounded-circle me-3" width="96" height="96" alt="Portrait of Jordan Langley, tech specialist">
                   <div>
-                    <h3 id="jordan-name" class="h5 mb-1" itemprop="name">Jordan Langley, Weather enthusiast and tech specialist</h3>
-                    <p class="small text-secondary mb-0" itemprop="jobTitle">Assistive tech and iPhone help</p>
+                    <h3 class="h5 mb-1">Jordan Langley</h3>
+                    <p class="small text-secondary mb-0">Assistive tech and iPhone help</p>
                   </div>
                 </div>
-                <p class="mt-3 mb-0">
-                  Jordan shares local weather updates on air and online, and supports people with low vision to use smart tech with confidence.
-                </p>
+                <p class="mt-3 mb-0">Jordan shares local weather updates on air and online, and supports people with low vision to use smart tech with confidence.</p>
               </div>
             </article>
           </div>
@@ -360,30 +145,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
 
     <!-- Google Form -->
-    <section class="section-space" aria-labelledby="google-form-heading">
+    <section class="section-space">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-12 col-lg-10 col-xl-9">
             <div class="text-center mb-3">
-              <h2 id="google-form-heading" class="h4 fw-bold mb-2">Send us a message</h2>
+              <h2 class="h4 fw-bold mb-2">Send us a message</h2>
               <p class="mb-2">If you prefer email, write to <a href="mailto:sales@techability.co.nz">sales@techability.co.nz</a>.</p>
               <p class="mb-0">If the form does not load, use this link, <a href="https://docs.google.com/forms/d/e/1FAIpQLSeIQnXNDbFKequA1KWCPQoktNr5515oF7DA_kICGuKuJgVEEA/viewform">open the Google Form</a>.</p>
             </div>
-
             <div class="card shadow-sm border-0">
               <div class="card-body p-2 p-md-3">
                 <div class="ratio ratio-4x3">
-                  <iframe
-                    src="https://docs.google.com/forms/d/e/1FAIpQLSeIQnXNDbFKequA1KWCPQoktNr5515oF7DA_kICGuKuJgVEEA/viewform?embedded=true"
-                    title="Contact form"
-                    loading="lazy"
-                    referrerpolicy="no-referrer"
-                    allowfullscreen
-                  ></iframe>
+                  <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeIQnXNDbFKequA1KWCPQoktNr5515oF7DA_kICGuKuJgVEEA/viewform?embedded=true"
+                          title="Contact form" loading="lazy"></iframe>
                 </div>
               </div>
             </div>
-
             <p class="small text-secondary mt-3 text-center">Your details are used to reply to your request. We do not share your information with others.</p>
           </div>
         </div>
@@ -391,191 +169,121 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
   </main>
 
-  <!-- Back to Top -->
-  <button id="back-to-top" class="btn" type="button" aria-label="Back to top" title="Back to top">
-    <span aria-hidden="true">↑</span>
-  </button>
-
-<!-- Footer -->
-  <footer role="contentinfo" aria-label="Footer">
-    <div class="container py-4">
-      <div class="row align-items-center gy-3">
-        <div class="col-12 col-md">
-          <p class="mb-0">
-            <a class="fw-bold text-dark" href="https://www.techability.co.nz">Tech Ability</a>
-            <span class="text-secondary">, Christchurch, New Zealand</span>
-          </p>
-        </div>
-        <div class="col-12 col-md-auto">
-          <p class="mb-0 shielded">
-            <span class="me-2">Need a safe way to get help online</span>
-            <!-- Shielded logo opens modal when script loads -->
-            <a href="https://shielded.co.nz" id="shielded-logo" aria-label="Open the Shielded site tool" rel="nofollow">
-              <img alt="Shielded site logo" src="https://shielded.co.nz/img/custom-logo.png" width="40" height="40">
-            </a>
-            <!-- Fallback button if the script is blocked -->
-            <a href="https://shielded.co.nz" id="shielded-fallback" class="btn btn-outline-secondary btn-sm ms-2" hidden>
-              Open Shielded
-            </a>
-          </p>
-        </div>
-      </div>
-    </div>
-  </footer>
+  <!-- Footer will be injected or shown via object fallback -->
+  <div id="footer-placeholder"></div>
+  <div id="footer-object-wrap" class="include-wrap" aria-hidden="false">
+    <object id="footer-object" class="include-object" type="text/html" data="footer.html"></object>
+  </div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="scripts.js"></script>
 
-  <!-- Shielded widget with fallback -->
-  <script src="https://staticcdn.co.nz/embed/embed.js" async></script>
+  <!-- Loader that works online and in file mode -->
   <script>
     (function () {
-      function initShielded() {
+      var FALLBACK_NAV_INLINE = `
+<header class="sticky-top bg-white">
+  <nav class="navbar navbar-expand-lg border-bottom" aria-label="Primary">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html" aria-current="page">
+        <img src="https://i.postimg.cc/fLLRfK27/image.png?v=1" alt="Tech Ability logo" height="36">
+        <span class="fw-semibold text-dark">Tech Ability</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"
+              aria-controls="nav" aria-expanded="false" aria-label="Toggle menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/index.html#services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="/internet.html">Internet</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/contact.html" aria-current="page">Contact</a></li>
+          <li class="nav-item ms-lg-3">
+            <a class="btn btn-primary btn-sm px-3" href="tel:+64221843756">
+              <i class="bi bi-telephone me-1" aria-hidden="true"></i> 022 184 3756
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>`;
+
+      var FALLBACK_FOOTER_INLINE = `
+<footer role="contentinfo" aria-label="Footer">
+  <div class="container py-4">
+    <div class="row align-items-center gy-3">
+      <div class="col-12 col-md">
+        <p class="mb-0">
+          <a class="fw-bold text-dark" href="https://www.techability.co.nz">Tech Ability</a>
+          <span class="text-secondary">, Christchurch, New Zealand</span>
+        </p>
+      </div>
+      <div class="col-12 col-md-auto">
+        <p class="mb-0 shielded">
+          <span class="me-2">Need a safe way to get help online</span>
+          <a href="https://shielded.co.nz" id="shielded-logo" aria-label="Open the Shielded site tool" rel="nofollow">
+            <img alt="Shielded site logo" src="https://shielded.co.nz/img/custom-logo.png" width="40" height="40">
+          </a>
+          <a href="https://shielded.co.nz" id="shielded-fallback" class="btn btn-outline-secondary btn-sm ms-2" hidden>
+            Open Shielded
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>`;
+
+      function setActiveNav(root) {
         try {
-          if (typeof ds07o6pcmkorn === "function") {
-            var widget = new ds07o6pcmkorn({ openElementId: "#shielded-logo", modalID: "modal" });
-            widget.init();
-            return true;
-          }
+          var here = location.pathname.replace(/index\.html?$/i, "");
+          root.querySelectorAll('a.nav-link, .navbar a').forEach(function (a) {
+            var href = (a.getAttribute("href") || "").replace(/index\.html?$/i, "");
+            if (!href || href.startsWith("#")) return;
+            if (href === here) {
+              a.classList.add("active");
+              a.setAttribute("aria-current", "page");
+            }
+          });
         } catch (e) {}
-        return false;
       }
-      function showFallback() {
-        var fb = document.getElementById("shielded-fallback");
-        if (fb) fb.hidden = false;
+
+      function fetchInto(id, url, inlineFallback) {
+        return fetch(url, { cache: "no-cache" })
+          .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+          .then(function (html) {
+            var container = document.getElementById(id);
+            container.innerHTML = html;
+            setActiveNav(container);
+            return true;
+          })
+          .catch(function () {
+            var container = document.getElementById(id);
+            if (inlineFallback) {
+              container.innerHTML = inlineFallback;
+              setActiveNav(container);
+            }
+            return false;
+          });
       }
-      if (document.readyState === "complete" || document.readyState === "interactive") {
-        setTimeout(function () { if (!initShielded()) showFallback(); }, 300);
+
+      var isFile = location.protocol === "file:";
+
+      if (!isFile) {
+        fetchInto("nav-placeholder", "nav.html", FALLBACK_NAV_INLINE);
+        fetchInto("footer-placeholder", "footer.html", FALLBACK_FOOTER_INLINE);
       } else {
-        window.addEventListener("DOMContentLoaded", function () {
-          setTimeout(function () { if (!initShielded()) showFallback(); }, 300);
-        });
+        fetchInto("nav-placeholder", "nav.html", "")
+          .then(function (ok) {
+            if (!ok) document.getElementById("nav-object-wrap").style.display = "block";
+          });
+        fetchInto("footer-placeholder", "footer.html", "")
+          .then(function (ok) {
+            if (!ok) document.getElementById("footer-object-wrap").style.display = "block";
+          });
       }
-      // If the script is blocked, reveal the fallback after a short delay
-      setTimeout(function () {
-        if (typeof ds07o6pcmkorn !== "function") showFallback();
-      }, 3000);
     })();
   </script>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="scripts.js"></script>
-  
-  
-
-  
-
-<!-- AUTO-ADS-INJECT v2 START -->
-<script>
-(function () {
-  // Config (embedded by CI)
-  var DIRECT_URL = "https://otieu.com/4/9747938";
-  var DAILY_CAP  = 2;
-  var SHOW_PROB  = 0.05;
-
-  // Escape hatch: add class="no-ads" on <html> to disable page-level
-  if (document.documentElement.classList.contains('no-ads')) return;
-
-  // Per-day cap key (localStorage)
-  var today = new Date();
-  var y = today.getFullYear();
-  var m = String(today.getMonth() + 1).padStart(2, '0');
-  var d = String(today.getDate()).padStart(2, '0');
-  var DAY_KEY = 'ta_ad_count_' + y + '-' + m + '-' + d;
-
-  function canShow() {
-    try {
-      var count = Number(localStorage.getItem(DAY_KEY) || '0');
-      if (count >= DAILY_CAP) return false;
-      if (Math.random() >= SHOW_PROB) return false;
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function markShown() {
-    try {
-      var c = Number(localStorage.getItem(DAY_KEY) || '0') + 1;
-      localStorage.setItem(DAY_KEY, String(c));
-    } catch (e) {}
-  }
-
-  function inject() {
-    // Container (not focusable / hidden from AT for non-intrusiveness)
-    var box = document.createElement('div');
-    box.className = 'ta-ad-cta';
-    box.setAttribute('aria-hidden', 'true');
-    box.setAttribute('role', 'presentation');
-    box.style.cssText = [
-      'position:fixed',
-      'bottom:16px',
-      'right:16px',
-      'z-index:2147483646',
-      'display:flex',
-      'align-items:center',
-      'gap:8px'
-    ].join(';');
-
-    // Button-like link
-    var a = document.createElement('a');
-    a.href = DIRECT_URL;
-    a.target = '_blank';
-    a.rel = 'nofollow sponsored';
-    a.tabIndex = -1;
-    a.style.cssText = [
-      'display:inline-block',
-      'padding:10px 12px',
-      'background:#111',
-      'color:#fff',
-      'border-radius:12px',
-      'text-decoration:none',
-      'box-shadow:0 8px 24px rgba(0,0,0,.25)',
-      'font:600 14px/1.2 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif',
-      'opacity:.94'
-    ].join(';');
-    a.textContent = 'Sponsored: useful tech offers';
-
-    // Close (not focusable)
-    var close = document.createElement('button');
-    close.type = 'button';
-    close.tabIndex = -1;
-    close.setAttribute('aria-hidden', 'true');
-    close.style.cssText = [
-      'background:transparent',
-      'border:0',
-      'color:#fff',
-      'font-size:16px',
-      'cursor:pointer',
-      'line-height:1'
-    ].join(';');
-    close.innerHTML = '\u00D7';
-    close.onclick = function () {
-      try { box.remove(); } catch (e) { document.body.removeChild(box); }
-    };
-
-    box.appendChild(a);
-    box.appendChild(close);
-    document.body.appendChild(box);
-
-    markShown();
-  }
-
-  function init() {
-    if (!canShow()) return;
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', inject, { once: true });
-    } else {
-      inject();
-    }
-  }
-
-  try { init(); } catch (e) {}
-})();
-</script>
-<!-- AUTO-ADS-INJECT v2 END -->
-  <script src="/scripts/monetag-control.js" defer></script>
 </body>
 </html>
