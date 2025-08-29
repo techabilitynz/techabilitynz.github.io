@@ -8,44 +8,32 @@
           <span class="text-secondary">, Christchurch, New Zealand</span>
         </p>
       </div>
-
       <div class="col-12 col-md-auto">
         <p class="mb-0 shielded">
           <span class="me-2">Need a safe way to get help online</span>
-          <!-- Logo that opens Shielded modal, never navigates -->
           <a href="#" id="shielded-logo" aria-label="Open the Shielded site tool" rel="nofollow">
             <img alt="Shielded site logo" src="https://shielded.co.nz/img/custom-logo.png" width="40" height="40">
           </a>
-          <!-- Optional text if script is blocked -->
-          <span id="shielded-note" class="ms-2 small text-secondary" hidden>
-            Unable to open the Shielded tool, a content blocker may be active
-          </span>
         </p>
       </div>
     </div>
   </div>
 </footer>
 
-<!-- Shielded widget loader, safe when included on every page -->
 <script>
   (function () {
-    // Stop any navigation from the logo, always open modal instead
     document.addEventListener('click', function (e) {
       var a = e.target.closest && e.target.closest('#shielded-logo');
-      if (a) { e.preventDefault(); }
+      if (a) e.preventDefault();
     }, true);
 
-    // Avoid double init if footer is included multiple times
     if (window.__shieldedInitDone) return;
     window.__shieldedInitDone = true;
 
     function initShielded() {
       try {
         if (typeof ds07o6pcmkorn === 'function') {
-          var widget = new ds07o6pcmkorn({
-            openElementId: '#shielded-logo',
-            modalID: 'modal'
-          });
+          var widget = new ds07o6pcmkorn({ openElementId: '#shielded-logo', modalID: 'modal' });
           widget.init();
           return true;
         }
@@ -53,30 +41,15 @@
       return false;
     }
 
-    function showNote() {
-      var el = document.getElementById('shielded-note');
-      if (el) el.hidden = false;
-    }
-
-    // Load the Shielded script once
-    var already = document.querySelector('script[src*="staticcdn.co.nz/embed/embed.js"]');
-    if (!already) {
-      var s = document.createElement('script');
+    var s = document.querySelector('script[src*="staticcdn.co.nz/embed/embed.js"]');
+    if (!s) {
+      s = document.createElement('script');
       s.src = 'https://staticcdn.co.nz/embed/embed.js';
       s.async = true;
-      s.onload = function () { setTimeout(function () { if (!initShielded()) showNote(); }, 100); };
-      s.onerror = showNote;
+      s.onload = function () { setTimeout(initShielded, 100); };
       document.head.appendChild(s);
     } else {
-      setTimeout(function () { if (!initShielded()) showNote(); }, 100);
+      setTimeout(initShielded, 100);
     }
-
-    // Final check in case a blocker delayed the load
-    setTimeout(function () { if (!initShielded()) showNote(); }, 3000);
   })();
 </script>
-
-<noscript>
-  <style>#shielded-note{display:inline !important}</style>
-  <span id="shielded-note" class="ms-2 small text-secondary">Enable JavaScript to open the Shielded tool</span>
-</noscript>
