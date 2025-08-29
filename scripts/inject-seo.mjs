@@ -1,11 +1,18 @@
 #!/usr/bin/env node
-// Tech Ability — SEO/Ads/GTM injector (idempotent, Node 18+ / 20+)
-// - Inject/refresh SEO tags (description/canonical/OG/Twitter/JSON-LD/Facebook publisher)
-// - Inject AdSense in <head> (unless page is ad-skipped)
-// - Inject GTM in <head> + <body> noscript
-// - Add Monetag controller <script> before </body> (unless ad-skipped)
-// - Remove legacy AdSense/AdRoll/Monetag snippets
-// - Never inject Monetag or AdSense on admin/ads-status.html
+// Tech Ability, SEO and Ads and GTM injector, idempotent, Node 18+ or 20+
+//
+// Injects on full pages only
+// Skips injections on repo root nav.html and footer.html
+// Cleans those partials if they already contain injected blocks
+//
+// What it does on full pages
+// - Refresh SEO tags (description, canonical, OG, Twitter, JSON-LD, Facebook publisher)
+// - Inject AdSense in <head> unless page is ad-skipped
+// - Inject GTM in <head> and <body> noscript
+// - Add Monetag controller <script> before </body> unless ad-skipped
+// - Remove legacy AdSense, AdRoll, Monetag snippets first
+//
+// Never inject Monetag or AdSense on admin/ads-status.html
 
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 
-// -------------------- CONFIG (via env with fallbacks) -----------------------
+// -------------------- CONFIG -----------------------
 const SITE_URL       = (process.env.SITE_URL       || 'https://www.techability.co.nz').replace(/\/+$/, '');
 const SITE_NAME      =  process.env.SITE_NAME      || 'Tech Ability';
 const DEFAULT_IMAGE  =  process.env.DEFAULT_IMAGE  || 'https://i.postimg.cc/SQ6GFs1B/banner-1200-630.jpg';
@@ -24,13 +31,18 @@ const FACEBOOK_URL   =  process.env.FACEBOOK_URL   || 'https://www.facebook.com/
 const GTM_ID         =  process.env.GTM_ID         || 'GTM-5RQFQZL6';
 const ADSENSE_CLIENT =  process.env.ADSENSE_CLIENT || 'ca-pub-9201314612379702';
 
-// Pages that must NEVER receive ads (AdSense & Monetag). Regex paths relative to repo root.
+// Pages that must NEVER receive ads
 const SKIP_ADS_PATHS = [
-  /^admin\/ads-status\.html$/i,      // hard block (your admin status page)
-  // Add more patterns here if you want to exclude other pages later
+  /^admin\/ads-status\.html$/i,
 ];
 
-// Files/dirs to ignore when scanning
+// Partials that must NEVER receive any injections at all
+const SKIP_PARTIALS = [
+  /^nav\.html$/i,
+  /^footer\.html$/i,
+];
+
+// Files and dirs to ignore when scanning
 const IGNORE_DIRS = new Set([
   '.git', '.github', 'node_modules', 'vendor', 'dist', 'build', 'Backup', 'Backups'
 ]);
@@ -65,7 +77,6 @@ function adsenseHeadSnippet(client) {
 }
 
 function jsonLdOrg() {
-  // Keep it minimal; we also allow pages to include their own <script data-techability="seo"> blocks
   return `<script type="application/ld+json">` +
     JSON.stringify({
       "@context": "https://schema.org",
@@ -118,7 +129,6 @@ function toRel(p) {
 }
 
 function toCanonical(rel) {
-  // /index.html -> /
   const norm = rel.replace(/^\/*/, '/');
   if (/\/index\.html$/i.test(norm)) {
     return SITE_URL + norm.replace(/index\.html$/i, '');
@@ -132,20 +142,15 @@ function getTitle(html) {
 }
 
 function getOrMakeDescription(html) {
-  // Prefer existing <meta name="description">
   const ex = html.match(/<meta\s+name=["']description["']\s+content=["']([\s\S]*?)["']\s*\/?>/i);
   if (ex) return ex[1].trim();
-
-  // Otherwise, derive from first <h1> or first <p>
   const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   if (h1) {
     const text = stripTags(h1[1]).trim().replace(/\s+/g, ' ');
     return `${text} — ${SITE_DESC}`;
   }
   const p = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-  if (p) {
-    return stripTags(p[1]).trim().replace(/\s+/g, ' ').slice(0, 300);
-  }
+  if (p) return stripTags(p[1]).trim().replace(/\s+/g, ' ').slice(0, 300);
   return SITE_DESC;
 }
 
@@ -154,7 +159,6 @@ function stripTags(s) {
 }
 
 function removeBetweenComments(html) {
-  // Remove prior AUTO-SEO-INJECT block for clean re-insert
   const re = new RegExp(`${escapeReg(commentStart)}[\\s\\S]*?${escapeReg(commentEnd)}`, 'i');
   return html.replace(re, '');
 }
@@ -164,12 +168,14 @@ function escapeReg(s) {
 }
 
 function stripLegacyAds(html) {
-  // Remove any old AdSense script(s)
+  // Remove any old AdSense scripts
   html = html.replace(/<script[^>]+pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js[^>]*>\s*<\/script>/gi, '');
   // Remove any AdRoll remnants
   html = html.replace(/<script[^>]*>[\s\S]*?adroll[^<]*<\/script>/gi, '');
-  // Remove any direct Monetag embeds (we rely on our controller instead)
-  html = html.replace(/<script[^>]+fpyf8\.com\/88\/tag\.min\.js[^>]*>\s*<\/script>/gi, '');
+  // Remove any direct Monetag embeds
+  html = html.replace(/<script[^>]+fpyf8\.com\/\d+\/tag\.min\.js[^>]*>\s*<\/script>/gi, '');
+  // Remove our AUTO-ADS-INJECT v2 blocks if present
+  html = html.replace(/<!--\s*AUTO-ADS-INJECT v2 START\s*-->[\s\S]*?<!--\s*AUTO-ADS-INJECT v2 END\s*-->/gi, '');
   return html;
 }
 
@@ -177,6 +183,10 @@ function stripGtm(html) {
   html = html.replace(/<!--\s*Google Tag Manager\s*-->[\s\S]*?<!--\s*End Google Tag Manager\s*-->/gi, '');
   html = html.replace(/<!--\s*Google Tag Manager \(noscript\)\s*-->[\s\S]*?<!--\s*End Google Tag Manager \(noscript\)\s*-->/gi, '');
   return html;
+}
+
+function stripMonetagController(html) {
+  return html.replace(/<script[^>]+monetag-control\.js[^>]*>\s*<\/script>/gi, '');
 }
 
 function ensureRobots(html) {
@@ -198,7 +208,7 @@ function ensureFacebookPublisher(html) {
 
 function injectAdSenseIfAllowed(html, relPath) {
   if (shouldSkipAds(relPath)) {
-    // Strip any existing AdSense too
+    // Also strip if it exists
     return html.replace(/<script[^>]+pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js[^>]*>\s*<\/script>/gi, '');
   }
   if (!/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=/i.test(html)) {
@@ -209,60 +219,68 @@ function injectAdSenseIfAllowed(html, relPath) {
 
 function injectGtm(html) {
   html = stripGtm(html);
-  // Insert head GTM as high as possible inside <head>
   html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${gtmHeadSnippet(GTM_ID)}\n`);
-  // Insert noscript immediately after <body>
   html = html.replace(/<body[^>]*>/i, (m) => `${m}\n${gtmBodyNoscript(GTM_ID)}\n`);
   return html;
 }
 
 function injectMonetagController(html, relPath) {
-  // Remove any old controller references to keep a single one at the end
-  html = html.replace(/<script[^>]+monetag-control\.js[^>]*>\s*<\/script>/gi, '');
-  if (shouldSkipAds(relPath)) return html; // don't add on admin/ads-status.html
+  html = stripMonetagController(html);
+  if (shouldSkipAds(relPath)) return html;
 
-  // Add the controller right before </body>
   if (/<\/body>/i.test(html)) {
-    html = html.replace(/<\/body>\s*<\/html>\s*$/i, (m) => `  <script src="/scripts/monetag-control.js" defer></script>\n</body>\n</html>`);
+    html = html.replace(/<\/body>\s*<\/html>\s*$/i, () => `  <script src="/scripts/monetag-control.js" defer></script>\n</body>\n</html>`);
   } else {
-    // Edge case: missing </body> — append at end
     html += `\n<script src="/scripts/monetag-control.js" defer></script>\n`;
   }
   return html;
 }
 
 function injectSeoBlock(html, relPath) {
+  // Clean and skip for partials
+  if (shouldSkipPartials(relPath)) {
+    html = removeBetweenComments(html);
+    html = stripLegacyAds(html);
+    html = stripGtm(html);
+    html = stripMonetagController(html);
+    return html;
+  }
+
   const canonical = toCanonical(relPath);
   const title = getTitle(html);
   const desc  = getOrMakeDescription(html);
 
-  // remove prior injected block and stale GTM/ads first
+  // Start clean
   html = removeBetweenComments(html);
   html = stripLegacyAds(html);
-  html = injectGtm(html); // always inject/refresh GTM
+
+  // GTM
+  html = injectGtm(html);
+
+  // SEO basics
   html = ensureRobots(html);
   html = ensureFacebookPublisher(html);
 
-  // canonical: replace existing or add
+  // Canonical
   if (/<link\s+rel=["']canonical["']/i.test(html)) {
     html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${escapeAttr(canonical)}">`);
   } else {
     html = html.replace(/<\/head>/i, `\n<link rel="canonical" href="${escapeAttr(canonical)}">\n</head>`);
   }
 
-  // description: replace or add
+  // Description
   if (/<meta\s+name=["']description["']/i.test(html)) {
     html = html.replace(/<meta\s+name=["']description["']\s+content=["'][\s\S]*?["']\s*\/?>/i, `<meta name="description" content="${escapeAttr(desc)}">`);
   } else {
     html = html.replace(/<\/head>/i, `\n<meta name="description" content="${escapeAttr(desc)}">\n</head>`);
   }
 
-  // OG + Twitter + minimal JSON-LD block wrapped in injector comments
+  // OG, Twitter, JSON-LD
   const ogTw = ogTwitterBlock({ url: canonical, title, desc, image: DEFAULT_IMAGE });
   const block = `\n${commentStart}\n${ogTw}\n${commentEnd}\n`;
   html = html.replace(/<\/head>/i, block + '</head>');
 
-  // AdSense (if allowed) and Monetag controller
+  // Ads and controller
   html = injectAdSenseIfAllowed(html, relPath);
   html = injectMonetagController(html, relPath);
 
@@ -272,6 +290,11 @@ function injectSeoBlock(html, relPath) {
 function shouldSkipAds(relPath) {
   const clean = relPath.replace(/^\.?\//, '');
   return SKIP_ADS_PATHS.some((rx) => rx.test(clean));
+}
+
+function shouldSkipPartials(relPath) {
+  const clean = relPath.replace(/^\.?\//, '');
+  return SKIP_PARTIALS.some((rx) => rx.test(clean));
 }
 
 // -------------------- Main -----------------------
@@ -287,7 +310,10 @@ files.forEach((abs) => {
 
   if (html !== before) {
     fs.writeFileSync(abs, html, 'utf8');
-    console.log('Updated:', rel, shouldSkipAds(rel) ? '(ads skipped)' : '');
+    console.log('Updated:', rel,
+      shouldSkipPartials(rel) ? '(cleaned partial, no injection)' :
+      shouldSkipAds(rel) ? '(ads skipped)' : ''
+    );
     changed++;
   }
 });

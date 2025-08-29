@@ -1,14 +1,8 @@
 // Lightweight DirectLink ad injector (no npm deps)
-// - Shows at 5% probability on both desktop & mobile
-// - Caps at 2 shows per device per day
-// - Skips /admin/ads-status.html
-// - Removes old Monetag/AdRoll and prior AUTO-ADS-INJECT blocks
-//
-// Env config (from workflow):
-//   DIRECT_LINK_URL (required)
-//   DAILY_CAP (default 2)
-//   SHOW_PROB (default 0.05)
-//   SKIP_PATHS (comma-separated relative paths to skip)
+// Shows at 5% probability on both desktop and mobile
+// Caps at 2 shows per device per day
+// Skips any paths in SKIP_PATHS, plus root nav.html and footer.html
+// Removes old Monetag, AdRoll, and prior AUTO-ADS-INJECT blocks
 
 import { promises as fs } from "fs";
 import path from "path";
@@ -26,7 +20,7 @@ const SKIP_LIST = (process.env.SKIP_PATHS || "")
 const START_MARK = "<!-- AUTO-ADS-INJECT v2 START -->";
 const END_MARK   = "<!-- AUTO-ADS-INJECT v2 END -->";
 
-// Old blocks we may have inserted previously:
+// Old blocks we may have inserted previously
 const OLD_STARTS = [
   "<!-- AUTO-ADS-INJECT START -->",
   "<!-- AUTO-ADS-INJECT v1 START -->",
@@ -38,16 +32,16 @@ const OLD_ENDS = [
 
 // Regexes to strip old third-party ad code we used before
 const STRIP_PATTERNS = [
-  // Monetag / domains we used previously
+  // Monetag domains we used previously
   /<script[^>]+monetag[^>]*><\/script>/gi,
   /<script[^>]+fpyf8\.com\/\d+\/tag\.min\.js[^>]*><\/script>/gi,
   // AdRoll
   /<script[^>]+s\.adroll\.com\/j\/[^>]*><\/script>/gi,
   /adroll_adv_id\s*=.+?<\/script>/gis,
-  // Our older inject blocks (v1)
+  // Our older inject blocks v1
   new RegExp(`${escapeRegex("<!-- AUTO-ADS-INJECT START -->")}[\\s\\S]*?${escapeRegex("<!-- AUTO-ADS-INJECT END -->")}`, "gi"),
   new RegExp(`${escapeRegex("<!-- AUTO-ADS-INJECT v1 START -->")}[\\s\\S]*?${escapeRegex("<!-- AUTO-ADS-INJECT v1 END -->")}`, "gi"),
-  // Remove duplicate v2 blocks if any
+  // Remove any existing v2 blocks
   new RegExp(`${escapeRegex(START_MARK)}[\\s\\S]*?${escapeRegex(END_MARK)}`, "gi"),
 ];
 
@@ -55,7 +49,7 @@ const STRIP_PATTERNS = [
 const snippet = `${START_MARK}
 <script>
 (function () {
-  // Config (embedded by CI)
+  // Config
   var DIRECT_URL = ${JSON.stringify(DIRECT_URL)};
   var DAILY_CAP  = ${JSON.stringify(DAILY_CAP)};
   var SHOW_PROB  = ${JSON.stringify(SHOW_PROB)};
@@ -63,7 +57,7 @@ const snippet = `${START_MARK}
   // Escape hatch: add class="no-ads" on <html> to disable page-level
   if (document.documentElement.classList.contains('no-ads')) return;
 
-  // Per-day cap key (localStorage)
+  // Per-day cap key
   var today = new Date();
   var y = today.getFullYear();
   var m = String(today.getMonth() + 1).padStart(2, '0');
@@ -89,7 +83,6 @@ const snippet = `${START_MARK}
   }
 
   function inject() {
-    // Container (not focusable / hidden from AT for non-intrusiveness)
     var box = document.createElement('div');
     box.className = 'ta-ad-cta';
     box.setAttribute('aria-hidden', 'true');
@@ -104,7 +97,6 @@ const snippet = `${START_MARK}
       'gap:8px'
     ].join(';');
 
-    // Button-like link
     var a = document.createElement('a');
     a.href = DIRECT_URL;
     a.target = '_blank';
@@ -123,7 +115,6 @@ const snippet = `${START_MARK}
     ].join(';');
     a.textContent = 'Sponsored: useful tech offers';
 
-    // Close (not focusable)
     var close = document.createElement('button');
     close.type = 'button';
     close.tabIndex = -1;
@@ -162,11 +153,8 @@ const snippet = `${START_MARK}
 </script>
 ${END_MARK}`;
 
-// Walk repo and process HTML files
 const edited = [];
-
 await walkAndProcess(".");
-
 if (edited.length) {
   console.log(`Updated ${edited.length} file(s):`);
   edited.forEach(f => console.log(" - " + f));
@@ -189,8 +177,9 @@ async function walkAndProcess(relDir) {
     if (!name.toLowerCase().endsWith(".html")) continue;
 
     const rel = path.join(relDir, name).replace(/^[.][/\\]?/, "").replace(/\\/g, "/");
+
     if (shouldSkip(rel)) {
-      // Still strip old ad code if present, but do NOT add new snippet
+      // Still strip old ad code if present, but do not add new snippet
       const changed = await stripOnly(path.join(ROOT, rel));
       if (changed) edited.push(rel);
       continue;
@@ -202,8 +191,11 @@ async function walkAndProcess(relDir) {
 }
 
 function shouldSkip(relPath) {
-  // Explicit skip list
-  if (SKIP_LIST.some(p => relPath.toLowerCase() === p.toLowerCase())) return true;
+  const lower = relPath.toLowerCase();
+  // Always skip root partials
+  if (lower === 'nav.html' || lower === 'footer.html') return true;
+  // Skip any paths provided via env
+  if (SKIP_LIST.some(p => lower === p.toLowerCase())) return true;
   return false;
 }
 
@@ -211,10 +203,7 @@ async function stripOnly(absFile) {
   let html = await fs.readFile(absFile, "utf8");
   const original = html;
 
-  // Remove any known ad blocks / third-party code
-  STRIP_PATTERNS.forEach(rx => {
-    html = html.replace(rx, "");
-  });
+  STRIP_PATTERNS.forEach(rx => { html = html.replace(rx, ""); });
 
   if (html !== original) {
     await fs.writeFile(absFile, tidy(html), "utf8");
@@ -227,12 +216,10 @@ async function updateHtml(absFile) {
   let html = await fs.readFile(absFile, "utf8");
   const original = html;
 
-  // 1) Strip any known older ad blocks / Monetag / AdRoll
-  STRIP_PATTERNS.forEach(rx => {
-    html = html.replace(rx, "");
-  });
+  // 1) Strip any known older ad blocks and third parties
+  STRIP_PATTERNS.forEach(rx => { html = html.replace(rx, ""); });
 
-  // 2) Ensure we don't have multiple v2 blocks
+  // 2) Ensure we do not have multiple v2 blocks
   html = html.replace(new RegExp(`${escapeRegex(START_MARK)}[\\s\\S]*?${escapeRegex(END_MARK)}`, "gi"), "");
 
   // 3) Inject just before </body> if present, otherwise at the end
@@ -251,7 +238,6 @@ async function updateHtml(absFile) {
 }
 
 function tidy(s) {
-  // Collapse extra blank lines introduced by replaces
   return s.replace(/\n{3,}/g, "\n\n");
 }
 
