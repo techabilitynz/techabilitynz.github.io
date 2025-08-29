@@ -479,10 +479,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   var DAILY_CAP  = 2;
   var SHOW_PROB  = 0.05;
 
-  // Escape hatch: add class="no-ads" on <html> to disable page-level
+  // Escape hatch, add class="no-ads" on <html> to disable page level
   if (document.documentElement.classList.contains('no-ads')) return;
 
-  // Per-day cap key
+  // Per day cap key
   var today = new Date();
   var y = today.getFullYear();
   var m = String(today.getMonth() + 1).padStart(2, '0');
@@ -495,9 +495,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (count >= DAILY_CAP) return false;
       if (Math.random() >= SHOW_PROB) return false;
       return true;
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   }
 
   function markShown() {
@@ -560,7 +558,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     box.appendChild(a);
     box.appendChild(close);
     document.body.appendChild(box);
-
     markShown();
   }
 
@@ -572,7 +569,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       inject();
     }
   }
-
   try { init(); } catch (e) {}
 })();
 </script>
