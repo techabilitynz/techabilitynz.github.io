@@ -3,6 +3,7 @@
 // Caps at 2 shows per device per day
 // Skips any paths in SKIP_PATHS, plus root nav.html and footer.html
 // Removes old Monetag, AdRoll, and prior AUTO-ADS-INJECT blocks
+// Also strips any Git conflict markers it finds
 
 import { promises as fs } from "fs";
 import path from "path";
@@ -19,16 +20,6 @@ const SKIP_LIST = (process.env.SKIP_PATHS || "")
 
 const START_MARK = "<!-- AUTO-ADS-INJECT v2 START -->";
 const END_MARK   = "<!-- AUTO-ADS-INJECT v2 END -->";
-
-// Old blocks we may have inserted previously
-const OLD_STARTS = [
-  "<!-- AUTO-ADS-INJECT START -->",
-  "<!-- AUTO-ADS-INJECT v1 START -->",
-];
-const OLD_ENDS = [
-  "<!-- AUTO-ADS-INJECT END -->",
-  "<!-- AUTO-ADS-INJECT v1 END -->",
-];
 
 // Regexes to strip old third-party ad code we used before
 const STRIP_PATTERNS = [
@@ -179,7 +170,7 @@ async function walkAndProcess(relDir) {
     const rel = path.join(relDir, name).replace(/^[.][/\\]?/, "").replace(/\\/g, "/");
 
     if (shouldSkip(rel)) {
-      // Still strip old ad code if present, but do not add new snippet
+      // Still strip old ad code and conflict markers, but do not add new snippet
       const changed = await stripOnly(path.join(ROOT, rel));
       if (changed) edited.push(rel);
       continue;
@@ -199,14 +190,22 @@ function shouldSkip(relPath) {
   return false;
 }
 
+function removeGitConflictMarkers(s) {
+  // remove whole blocks and stray lines, then tidy
+  s = s.replace(/<<<<<<<[\s\S]*?>>>>>>>[^\n]*\n?/g, "");
+  s = s.replace(/^(<<<<<<<|=======|>>>>>>>) .*$\n?/gm, "");
+  return s.replace(/\n{3,}/g, "\n\n");
+}
+
 async function stripOnly(absFile) {
   let html = await fs.readFile(absFile, "utf8");
   const original = html;
 
   STRIP_PATTERNS.forEach(rx => { html = html.replace(rx, ""); });
+  html = removeGitConflictMarkers(html);
 
   if (html !== original) {
-    await fs.writeFile(absFile, tidy(html), "utf8");
+    await fs.writeFile(absFile, html, "utf8");
     return true;
   }
   return false;
@@ -230,15 +229,14 @@ async function updateHtml(absFile) {
     html = html + `\n${snippet}\n`;
   }
 
+  // 4) Strip any conflict markers
+  html = removeGitConflictMarkers(html);
+
   if (html !== original) {
-    await fs.writeFile(absFile, tidy(html), "utf8");
+    await fs.writeFile(absFile, html, "utf8");
     return true;
   }
   return false;
-}
-
-function tidy(s) {
-  return s.replace(/\n{3,}/g, "\n\n");
 }
 
 function escapeRegex(s) {

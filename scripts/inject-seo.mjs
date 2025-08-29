@@ -4,6 +4,7 @@
 // Injects on full pages only
 // Skips injections on repo root nav.html and footer.html
 // Cleans those partials if they already contain injected blocks
+// Also strips any Git conflict markers it finds
 //
 // What it does on full pages
 // - Refresh SEO tags (description, canonical, OG, Twitter, JSON-LD, Facebook publisher)
@@ -236,6 +237,12 @@ function injectMonetagController(html, relPath) {
   return html;
 }
 
+function removeGitConflictMarkers(s) {
+  s = s.replace(/<<<<<<<[\s\S]*?>>>>>>>[^\n]*\n?/g, "");
+  s = s.replace(/^(<<<<<<<|=======|>>>>>>>) .*$\n?/gm, "");
+  return s.replace(/\n{3,}/g, "\n\n");
+}
+
 function injectSeoBlock(html, relPath) {
   // Clean and skip for partials
   if (shouldSkipPartials(relPath)) {
@@ -243,7 +250,7 @@ function injectSeoBlock(html, relPath) {
     html = stripLegacyAds(html);
     html = stripGtm(html);
     html = stripMonetagController(html);
-    return html;
+    return removeGitConflictMarkers(html);
   }
 
   const canonical = toCanonical(relPath);
@@ -284,7 +291,8 @@ function injectSeoBlock(html, relPath) {
   html = injectAdSenseIfAllowed(html, relPath);
   html = injectMonetagController(html, relPath);
 
-  return html;
+  // Final clean for conflict markers
+  return removeGitConflictMarkers(html);
 }
 
 function shouldSkipAds(relPath) {
@@ -321,3 +329,6 @@ files.forEach((abs) => {
 if (!changed) {
   console.log('No HTML changes needed.');
 }
+
+// -------------------- helpers used above --------------------
+function stripTags(s) { return s.replace(/<[^>]*>/g, ''); }
