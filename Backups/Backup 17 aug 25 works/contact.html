@@ -421,7 +421,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- AUTO-ADS-INJECT v2 START -->
 <script>
 (function () {
-  // Config (embedded by CI)
+  // Config
   var DIRECT_URL = "https://otieu.com/4/9747938";
   var DAILY_CAP  = 2;
   var SHOW_PROB  = 0.05;
@@ -429,7 +429,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   // Escape hatch: add class="no-ads" on <html> to disable page-level
   if (document.documentElement.classList.contains('no-ads')) return;
 
-  // Per-day cap key (localStorage)
+  // Per-day cap key
   var today = new Date();
   var y = today.getFullYear();
   var m = String(today.getMonth() + 1).padStart(2, '0');
@@ -455,7 +455,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   function inject() {
-    // Container (not focusable / hidden from AT for non-intrusiveness)
     var box = document.createElement('div');
     box.className = 'ta-ad-cta';
     box.setAttribute('aria-hidden', 'true');
@@ -470,7 +469,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       'gap:8px'
     ].join(';');
 
-    // Button-like link
     var a = document.createElement('a');
     a.href = DIRECT_URL;
     a.target = '_blank';
@@ -489,7 +487,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     ].join(';');
     a.textContent = 'Sponsored: useful tech offers';
 
-    // Close (not focusable)
     var close = document.createElement('button');
     close.type = 'button';
     close.tabIndex = -1;
