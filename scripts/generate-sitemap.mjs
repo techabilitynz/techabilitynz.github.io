@@ -36,7 +36,7 @@ const EXCLUDED_DIRS = new Set([
 ]);
 
 const EXCLUDED_FILES = new Set([
-  "sitemap.xml", "robots.txt", "CNAME", "README.md", "readme.md", "LICENSE", "license", "ad-status.html"
+  "sitemap.xml", "robots.txt", "CNAME", "README.md", "readme.md", "LICENSE", "license", "ad-status.html", "nav.html", "footer.html"
 ]);
 
 const EXCLUDE_REGEX = /(^|\/)(beta|backup|backups)(\/|$)/i;
