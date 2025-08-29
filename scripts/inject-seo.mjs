@@ -4,9 +4,9 @@
 // Injects on full pages only
 // Skips injections on repo root nav.html and footer.html
 // Cleans those partials if they already contain injected blocks
-// Also strips any Git conflict markers it finds
+// Strips Git conflict markers anywhere
 //
-// What it does on full pages
+// What it does on full pages:
 // - Refresh SEO tags (description, canonical, OG, Twitter, JSON-LD, Facebook publisher)
 // - Inject AdSense in <head> unless page is ad-skipped
 // - Inject GTM in <head> and <body> noscript
@@ -142,6 +142,10 @@ function getTitle(html) {
   return m ? m[1].trim() : SITE_NAME;
 }
 
+function stripTags(s) {
+  return s.replace(/<[^>]*>/g, '');
+}
+
 function getOrMakeDescription(html) {
   const ex = html.match(/<meta\s+name=["']description["']\s+content=["']([\s\S]*?)["']\s*\/?>/i);
   if (ex) return ex[1].trim();
@@ -153,10 +157,6 @@ function getOrMakeDescription(html) {
   const p = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
   if (p) return stripTags(p[1]).trim().replace(/\s+/g, ' ').slice(0, 300);
   return SITE_DESC;
-}
-
-function stripTags(s) {
-  return s.replace(/<[^>]*>/g, '');
 }
 
 function removeBetweenComments(html) {
@@ -329,6 +329,3 @@ files.forEach((abs) => {
 if (!changed) {
   console.log('No HTML changes needed.');
 }
-
-// -------------------- helpers used above --------------------
-function stripTags(s) { return s.replace(/<[^>]*>/g, ''); }
